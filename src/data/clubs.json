@@ -1,0 +1,5 @@
+[
+    { "slug": "campestre-ensenada", "name": "Club Campestre Ensenada", "city": "Ensenada, BC", "image": "/clubs/campestre-ensenada.jpg" },
+    { "slug": "bajamar-la-mision", "name": "Bajamar Golf (La Misión)", "city": "La Misión, BC", "image": "/clubs/bajamar-la-mision.jpg" },
+    { "slug": "campestre-tijuana", "name": "Club Campestre Tijuana", "city": "Tijuana, BC", "image": "/clubs/campestre-tijuana.jpg"}
+  ]
