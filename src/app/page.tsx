@@ -17,7 +17,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)] to-transparent" />
 
         <div className="absolute inset-x-0 bottom-0 mx-auto max-w-6xl px-4 pb-10">
-          <h1 className="text-4xl md:text-6xl font-extrabold">GOLFCAM</h1>
+          <h1 className="text-4xl md:text-6xl font-extrabold">Rip It</h1>
         <p className="mt-2 max-w-xl text-[var(--foreground)]">
           Replays instantáneos desde tee y green. Captura el último minuto y compártelo al instante.
         </p>

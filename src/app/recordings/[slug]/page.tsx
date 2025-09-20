@@ -1,53 +1,69 @@
 // src/app/recordings/[slug]/page.tsx
-import Link from "next/link";
+"use client";
+
+import { useParams, useRouter } from "next/navigation";
 import clubs from "@/data/clubs.json";
-import { notFound } from "next/navigation";
+import { useMemo, useState } from "react";
 
-type Props = { params: { slug: string } };
+export default function ClubDatePickerPage() {
+  const { slug } = useParams() as { slug: string };
+  const router = useRouter();
 
-export async function generateMetadata({ params }: Props) {
-  const club = clubs.find(c => c.slug === params.slug);
-  return {
-    title: club ? `Grabaciones · ${club.name}` : "Grabaciones",
-    description: club ? `Selecciona un hoyo en ${club.name}` : "Selecciona un hoyo",
+  const club = useMemo(() => clubs.find(c => c.slug === slug), [slug]);
+  if (!club) {
+    // notFound() no funciona en client; redirige o muestra fallback
+    router.replace("/recordings");
+    return null;
+  }
+
+  const [date, setDate] = useState<string>(() => {
+    const d = new Date();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${d.getFullYear()}-${mm}-${dd}`;
+  });
+
+  const goNext = () => {
+    if (!date) return;
+    router.push(`/recordings/${slug}/${date}`);
   };
-}
-
-export default function ClubRecordingsPage({ params }: Props) {
-  const club = clubs.find(c => c.slug === params.slug);
-  if (!club) return notFound();
-
-  // Hoyos 1..18 (ajusta si tu club tiene menos/más)
-  const holes = Array.from({ length: 18 }, (_, i) => i + 1);
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <section className="max-w-6xl mx-auto px-4 py-10">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">Grabaciones · {club.name}</h1>
-          <p className="text-sm text-slate-500">{club.city}</p>
+      <section className="max-w-6xl mx-auto px-4 py-10 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">{club.name}</h1>
+          <p className="text-sm text-muted-foreground">{club.city}</p>
         </div>
 
-        <h2 className="text-xl font-semibold mb-4">Selecciona un hoyo</h2>
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {holes.map((h) => (
-            <Link
-              key={h}
-              href={`/recordings/${params.slug}/${h}`}
-              className="group rounded-xl border border-gray-200 bg-white shadow-sm p-4
-                         transition hover:shadow-lg hover:border-green-500 hover:-translate-y-0.5"
+        {/* 👇 Usa tokens del tema en vez de bg-white/border-gray */}
+        <div className="rounded-xl border border-border bg-card p-6 max-w-md shadow-sm">
+          <h2 className="text-lg font-semibold mb-3 text-card-foreground">Elige una fecha</h2>
+
+          <div className="flex items-center gap-3">
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="px-3 py-2 rounded-lg bg-background text-foreground
+                         border border-input placeholder:text-muted-foreground
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                         ring-offset-2 ring-offset-background"
+            />
+            <button
+              onClick={goNext}
+              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground
+                         hover:opacity-90 transition shadow-sm
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                         ring-offset-2 ring-offset-background"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-slate-500">Hoyo</div>
-                  <div className="text-xl font-semibold">#{h}</div>
-                </div>
-                <div className="text-green-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition">
-                  Ver →
-                </div>
-              </div>
-            </Link>
-          ))}
+              Continuar
+            </button>
+          </div>
+
+          <p className="text-xs text-muted-foreground mt-3">
+            (Después elegiremos el hoyo y los horarios disponibles de esa fecha)
+          </p>
         </div>
       </section>
     </main>

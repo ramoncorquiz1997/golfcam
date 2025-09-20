@@ -3,8 +3,8 @@ import clubs from "@/data/clubs.json";
 import ClubCard from "@/components/ClubCard";
 
 export const metadata = {
-  title: "Clubs | Golfcam",
-  description: "Campos y clubes asociados a Golfcam",
+  title: "Clubs | Rip It",
+  description: "Campos y clubes asociados a Rip It",
 };
 
 export default function ClubsPage() {

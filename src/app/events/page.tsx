@@ -3,7 +3,7 @@ import events from "@/data/events.json";
 import EventCard from "@/components/EventCard";
 
 export const metadata = {
-  title: "Eventos | Golfcam",
+  title: "Eventos | Rip It",
   description: "Próximos torneos y actividades",
 };
 

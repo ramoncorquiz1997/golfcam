@@ -2,7 +2,7 @@ import "@/app/globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-export const metadata = { title: "GolfCam", description: "Replays instantáneos para campos de golf" };
+export const metadata = { title: "Rip It", description: "Replays instantáneos para campos de golf" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

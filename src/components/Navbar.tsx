@@ -9,7 +9,7 @@ export default function Navbar() {
           href="/"
           className="font-extrabold tracking-wide text-xl text-white transition-transform hover:scale-105 hover:text-[var(--secondary)]"
         >
-          GOLFCAM
+          Rip It
         </Link>
 
         {/* Navegación */}
