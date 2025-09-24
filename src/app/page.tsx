@@ -1,3 +1,4 @@
+import Image from "next/image";
 import clubs from "@/data/clubs.json";
 import events from "@/data/events.json";
 import ClubCard from "@/components/ClubCard";
@@ -7,11 +8,15 @@ export default function Home() {
   return (
     <>
       <section className="relative">
-        <img
-          src="/hero.jpg"
-          className="w-full h-[56vh] object-cover opacity-90"
-          alt=""
-        />
+        <div className="relative w-full h-[56vh]">
+          <Image
+            src="/hero.jpg"
+            alt=""
+            fill
+            className="object-cover opacity-90"
+            priority
+          />
+        </div>
 
         {/* Overlay dinámico */}
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)] to-transparent" />

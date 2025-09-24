@@ -14,7 +14,7 @@ export async function getVideosForHoleByDate(
 ) {
   const base = `/recordings/${slug}/${date}/${hole}`;
   return [
-    { url: `${base}/051235.mp4`, ts: "05:12:35", label: "Clip de prueba" },
+    { url: `${base}/051235.mp4`, ts: "05:12:35", },
     // en producción aquí iterarías sobre los archivos reales
   ];
 }

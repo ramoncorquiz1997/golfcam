@@ -10,18 +10,12 @@ export default function ClubDatePickerPage() {
   const router = useRouter();
 
   const club = useMemo(() => clubs.find(c => c.slug === slug), [slug]);
+  const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   if (!club) {
     // notFound() no funciona en client; redirige o muestra fallback
     router.replace("/recordings");
     return null;
   }
-
-  const [date, setDate] = useState<string>(() => {
-    const d = new Date();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${d.getFullYear()}-${mm}-${dd}`;
-  });
 
   const goNext = () => {
     if (!date) return;

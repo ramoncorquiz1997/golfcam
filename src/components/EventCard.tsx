@@ -15,7 +15,7 @@ export default function EventCard({ title, club, date, cta, status, image }: Pro
     year: "numeric" 
   });
 
-  const fallback = "images/events/default.jpg"; // asegúrate de que esté en public/events/
+  const fallback = "/images/events/default.jpg"; // asegúrate de que esté en public/events/
 
   return (
     <div

@@ -1,18 +1,22 @@
 // src/app/recordings/[slug]/[date]/page.tsx
 "use client";
 
-import { useRouter } from "next/navigation";
-// ❌ notFound solo sirve en server components
-// import { notFound } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+import type { ChangeEvent } from "react";
 import clubs from "@/data/clubs.json";
 
-type Params = { slug: string; date: string };
-
-export default function ClubDateHolesPage({ params }: { params: Params }) {
-  const { slug, date } = params;
+export default function ClubDateHolesPage() {
   const router = useRouter();
+  const rawParams = useParams();
+  const { slug, date } = rawParams as { slug: string; date: string };
 
-  const club = clubs.find(c => c.slug === slug);
+  // Validaciones básicas
+  if (typeof slug !== "string" || typeof date !== "string") {
+    // Podrías renderizar un loading o null
+    return null;
+  }
+
+  const club = clubs.find((c) => c.slug === slug);
   if (!club) {
     router.replace("/recordings");
     return null;
@@ -20,7 +24,7 @@ export default function ClubDateHolesPage({ params }: { params: Params }) {
 
   const holes = Array.from({ length: 18 }, (_, i) => i + 1);
 
-  function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
+  function handleChange(e: ChangeEvent<HTMLSelectElement>) {
     const hole = e.target.value;
     if (hole) router.push(`/recordings/${slug}/${date}/${hole}`);
   }
@@ -36,7 +40,9 @@ export default function ClubDateHolesPage({ params }: { params: Params }) {
         </div>
 
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-card-foreground mb-3">Selecciona un hoyo</h2>
+          <h2 className="text-lg font-semibold text-card-foreground mb-3">
+            Selecciona un hoyo
+          </h2>
 
           <select
             onChange={handleChange}
@@ -46,9 +52,13 @@ export default function ClubDateHolesPage({ params }: { params: Params }) {
                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
                        ring-offset-2 ring-offset-background"
           >
-            <option value="" disabled>-- Elige un hoyo --</option>
-            {holes.map(n => (
-              <option key={n} value={n}>Hoyo {n}</option>
+            <option value="" disabled>
+              -- Elige un hoyo --
+            </option>
+            {holes.map((n) => (
+              <option key={n} value={n}>
+                Hoyo {n}
+              </option>
             ))}
           </select>
         </div>
