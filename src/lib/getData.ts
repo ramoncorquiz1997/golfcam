@@ -1,20 +1,21 @@
 // src/lib/getData.ts
 export type Clip = {
   url: string;
-  ts: string;
-  label?: string;
-  thumb?: string;
+  ts: string;      // "HH:MM:SS"
+  label?: string;  // "TEE — 14:30:43"
+  pos?: "tee" | "green";
+  name?: string;
+  thumb?: string;  // 👈 añade esta línea
 };
 
-// src/lib/getData.ts
 export async function getVideosForHoleByDate(
   slug: string,
   hole: number,
-  date: string // formato "YYYY-MM-DD"
-) {
-  const base = `/recordings/${slug}/${date}/${hole}`;
-  return [
-    { url: `${base}/051235.mp4`, ts: "05:12:35", },
-    // en producción aquí iterarías sobre los archivos reales
-  ];
+  date: string // "YYYY-MM-DD"
+): Promise<Clip[]> {
+  const res = await fetch(`/api/recordings/${slug}/${date}/${hole}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) return [];
+  return res.json();
 }
