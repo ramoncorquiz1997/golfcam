@@ -1,49 +1,66 @@
+// src/app/api/recordings/[slug]/[date]/[hole]/route.ts
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
+import path from "node:path";
+import fs from "node:fs/promises";
+
+type Clip = {
+  url: string;
+  ts: string;       // "HH:MM:SS"
+  label: string;    // "TEE — 14:30:43"
+  pos: "tee" | "green";
+  name: string;     // nombre de archivo
+};
 
 const RECORDINGS_BASE =
   process.env.RECORDINGS_BASE || "/var/www/golfcam/site/golfcam/public/recordings";
-const PUBLIC_PREFIX =
+const PUBLIC_RECORDINGS_PREFIX =
   process.env.PUBLIC_RECORDINGS_PREFIX || "/recordings";
 
-// 143043_green.mp4 / 091254_tee.mp4
-const FILE_RE = /^(\d{6})_(tee|green)\.mp4$/i;
-const hhmmss = (h: string) => `${h.slice(0,2)}:${h.slice(2,4)}:${h.slice(4,6)}`;
 function splitDate(date: string) {
-  const p = date.includes("-") ? date.split("-") : date.split("/");
-  if (p.length !== 3) throw new Error("bad date");
-  const [Y, M, D] = p;
-  return { yyyy: Y, mm: M.padStart(2, "0"), d: String(parseInt(D, 10)) }; // carpeta del día sin 0 izq
+  const [YYYY, MM, DD] = date.split("-");
+  return { yyyy: YYYY, mm: MM, d: String(parseInt(DD, 10)) };
 }
 
+function hhmmssToHuman(hhmmss: string) {
+  return `${hhmmss.slice(0, 2)}:${hhmmss.slice(2, 4)}:${hhmmss.slice(4, 6)}`;
+}
+
+const FILE_RE = /^(\d{6})_(tee|green)\.mp4$/i;
+
 export async function GET(
-  _req: Request,
-  { params }: { params: { slug: string; date: string; hole: string } }
+  request: Request,
+  context: { params: Promise<{ slug: string; date: string; hole: string }> }
 ) {
-  const { slug, date, hole } = params;
-  const holeDir = `hole-${Number(hole)}`;
+  const { slug, date, hole } = await context.params;
+
   const { yyyy, mm, d } = splitDate(date);
+  const holeDir = `hole-${Number(hole)}`;
   const absDir = path.join(RECORDINGS_BASE, slug, holeDir, yyyy, mm, d);
 
   let entries: string[] = [];
-  try { entries = await fs.readdir(absDir); } catch { return NextResponse.json([]); }
+  try {
+    entries = await fs.readdir(absDir);
+  } catch {
+    return NextResponse.json([]); // no hay carpeta → sin clips
+  }
 
-  const clips = entries
-    .map(name => {
-      const m = name.match(FILE_RE);
-      if (!m) return null;
-      const time = hhmmss(m[1]);
-      const pos = m[2].toLowerCase();
-      return {
-        url: `${PUBLIC_PREFIX}/${slug}/${holeDir}/${yyyy}/${mm}/${d}/${name}`,
-        ts: time,
-        label: `${pos.toUpperCase()} — ${time}`,
-        pos,
-        name,
-      };
-    })
-    .filter(Boolean) as any[];
+  const clips: Clip[] = [];
+  for (const name of entries) {
+    const match = name.match(FILE_RE);
+    if (!match) continue;
+
+    const hhmmss = match[1];
+    const pos = match[2].toLowerCase() as "tee" | "green";
+    const ts = hhmmssToHuman(hhmmss);
+
+    clips.push({
+      url: `${PUBLIC_RECORDINGS_PREFIX}/${slug}/${holeDir}/${yyyy}/${mm}/${d}/${name}`,
+      ts,
+      label: `${pos.toUpperCase()} — ${ts}`,
+      pos,
+      name,
+    });
+  }
 
   clips.sort((a, b) => a.name.localeCompare(b.name));
   return NextResponse.json(clips);
