@@ -4,7 +4,6 @@ export type Clip = {
   url: string;           // URL pública al mp4
   ts: string;            // "HH:MM:SS"
   label?: string;        // "TEE — 14:30:43"
-  pos?: "tee" | "green";
   name?: string;
   thumb?: string;        // opcional (tu page lo usa de forma opcional)
 };
