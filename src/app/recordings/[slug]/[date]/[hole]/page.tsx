@@ -36,7 +36,7 @@ export default function HoleByDatePage() {
     (async () => {
       setLoading(true);
       const clips = await getVideosForHoleByDate(slug, holeNum, date);
-      const s = bucketVideosToSlots<Clip>(clips, { stepMin: 10, startHour: 5, endHour: 18 });
+      const s = bucketVideosToSlots<Clip>(clips, { stepMin: 60, startHour: 0, endHour: 24 });
 
       if (!alive) return;
       setSlots(s);
