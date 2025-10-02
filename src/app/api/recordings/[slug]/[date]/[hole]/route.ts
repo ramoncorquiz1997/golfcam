@@ -60,6 +60,9 @@ export async function GET(
     const url = `${PUBLIC_RECORDINGS_PREFIX}/${slug}/${holeDir}/${yyyy}/${mm}/${d}/${name}`;
     const label = `${pos === "clip" ? "CLIP" : pos.toUpperCase()} — ${ts}`;
 
+    const url = `${PUBLIC_RECORDINGS_PREFIX}/${slug}/${holeDir}/${yyyy}/${mm}/${d}/${name}`;
+    const label = `${pos === "clip" ? "CLIP" : pos.toUpperCase()} — ${ts}`;
+
     clips.push({ url, ts, label, pos, name });
   }
 
