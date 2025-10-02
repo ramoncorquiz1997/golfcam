@@ -29,10 +29,13 @@ function hhmmssToHuman(hhmmss: string) {
 const FILE_RE = /^(\d{6})(?:_(tee|green|cam))?\.mp4$/i;
 
 export async function GET(
-  _request: Request,
-  { params }: { params: { slug: string; date: string; hole: string } }
+  _req: Request,
+  { params }: { params: Record<string, string | string[]> }
 ) {
-  const { slug, date, hole } = params;
+  // Normalizamos params (pueden venir como string[])
+  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+  const date = Array.isArray(params.date) ? params.date[0] : params.date;
+  const hole = Array.isArray(params.hole) ? params.hole[0] : params.hole;
 
   const { yyyy, mm, d } = splitDate(date);
   const holeDir = `hole-${Number(hole)}`;
@@ -51,23 +54,16 @@ export async function GET(
     if (!match) continue;
 
     const hhmmss = match[1];
-    // pos puede ser "tee" | "green" | "cam" cuando viene en el nombre; si no, es "clip"
     const pos: Clip["pos"] = match[2] ? (match[2].toLowerCase() as Clip["pos"]) : "clip";
     const ts = hhmmssToHuman(hhmmss);
 
     const url = `${PUBLIC_RECORDINGS_PREFIX}/${slug}/${holeDir}/${yyyy}/${mm}/${d}/${name}`;
     const label = `${pos === "clip" ? "CLIP" : pos.toUpperCase()} — ${ts}`;
 
-    clips.push({
-      url,
-      ts,
-      label,
-      pos,
-      name,
-    });
+    clips.push({ url, ts, label, pos, name });
   }
 
-  // Ordena por nombre (HHMMSS...) para quedar cronológico
+  // Orden cronológico por nombre (HHMMSS…)
   clips.sort((a, b) => a.name.localeCompare(b.name));
 
   return NextResponse.json(clips);
