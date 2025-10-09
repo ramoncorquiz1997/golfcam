@@ -9,6 +9,13 @@ import { bucketVideosToSlots, type Slot } from "@/lib/timeSlots";
 import { getVideosForHoleByDate, type Clip } from "@/lib/getData";
 import PreRollAd from "@/components/PreRollAd";
 
+function toAbsoluteUrl(u?: string | null) {
+  if (!u) return "";
+  if (/^https?:\/\//i.test(u)) return u;             // ya es absoluta
+  if (typeof window !== "undefined") return `${window.location.origin}${u.startsWith("/") ? "" : "/"}${u}`;
+  return u; // fallback (SSR), pero este componente es client, así que casi no entra aquí
+}
+
 export default function HoleByDatePage() {
   const { slug, date, hole } = useParams() as { slug: string; date: string; hole: string };
   const router = useRouter();
@@ -16,14 +23,13 @@ export default function HoleByDatePage() {
 
   const club = useMemo(() => clubs.find(c => c.slug === slug), [slug]);
 
-  // Guardas de client component (en vez de notFound)
   useEffect(() => {
     if (!club || !Number.isFinite(holeNum) || holeNum < 1 || holeNum > 18) {
       router.replace("/recordings");
     }
   }, [club, holeNum, router]);
 
-  const [adDone, setAdDone] = useState(false); // anuncio debe verse siempre
+  const [adDone, setAdDone] = useState(false);
   const adSrc = `/ads/${slug}/${holeNum}.mp4`;
 
   const [slots, setSlots] = useState<Slot<Clip>[]>([]);
@@ -36,7 +42,8 @@ export default function HoleByDatePage() {
     (async () => {
       setLoading(true);
       const clips = await getVideosForHoleByDate(slug, holeNum, date);
-      const s = bucketVideosToSlots<Clip>(clips, { stepMin: 60, startHour: 0, endHour: 24 });
+      // 10 min por slot como lo tenías originalmente (ajusta si quieres)
+      const s = bucketVideosToSlots<Clip>(clips, { stepMin: 10, startHour: 5, endHour: 18 });
 
       if (!alive) return;
       setSlots(s);
@@ -54,12 +61,11 @@ export default function HoleByDatePage() {
 
   const currentSlot = slots.find(x => x.key === currentSlotKey) || null;
 
-  // URL para descarga: prioriza original si existe
-  const downloadUrl = currentVideo?.url ?? currentVideo?.url ?? "";
+  // URL final (absoluta) que debe ser un MP4 servido por nginx
+  const fileUrl = toAbsoluteUrl(currentVideo?.url);
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      {/* Overlay del patrocinador (bloquea todo hasta cerrar/saltar) */}
       {!adDone && (
         <PreRollAd
           src={adSrc}
@@ -74,7 +80,7 @@ export default function HoleByDatePage() {
           <p className="text-sm text-muted-foreground">{club?.city} • {date}</p>
         </div>
 
-        {/* Slots (10 min) */}
+        {/* Slots */}
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Horarios con video</h2>
           {loading ? (
@@ -107,7 +113,7 @@ export default function HoleByDatePage() {
           )}
         </section>
 
-        {/* Player + lista de clips del slot */}
+        {/* Player + lista */}
         <section className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-3">
             <div className="text-sm text-muted-foreground">
@@ -117,21 +123,32 @@ export default function HoleByDatePage() {
             <div className="aspect-video w-full rounded-xl border border-border bg-black/80 grid place-items-center text-white/60">
               {currentVideo ? (
                 <video
-                  key={currentVideo.url}
-                  src={currentVideo.url}
+                  key={fileUrl}                   // fuerza recarga al cambiar clip
+                  src={fileUrl}
                   controls
+                  playsInline
+                  preload="metadata"
                   className="w-full h-full rounded-xl"
-                />
+                  onError={(e) => {
+                    // Te deja claro si falla la fuente:
+                    console.error("Video error. URL:", fileUrl, e);
+                    alert("No se pudo reproducir el video. Ver consola para detalles.");
+                  }}
+                >
+                  <source src={fileUrl} type="video/mp4" />
+                </video>
               ) : (
                 "Sin selección"
               )}
             </div>
 
-            {/* Acción: descargar clip seleccionado */}
+            {/* Descargar clip seleccionado */}
             <div className="flex items-center gap-3">
               <a
-                href={downloadUrl}
+                href={fileUrl}
                 download
+                target="_blank"
+                rel="noopener noreferrer"
                 className={[
                   "inline-flex items-center justify-center px-4 py-2 rounded-lg",
                   "bg-primary text-primary-foreground hover:opacity-90 transition",
