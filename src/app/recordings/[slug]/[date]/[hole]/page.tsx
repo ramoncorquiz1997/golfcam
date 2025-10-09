@@ -4,16 +4,32 @@
 import Image from "next/image";
 import clubs from "@/data/clubs.json";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { bucketVideosToSlots, type Slot } from "@/lib/timeSlots";
 import { getVideosForHoleByDate, type Clip } from "@/lib/getData";
 import PreRollAd from "@/components/PreRollAd";
 
-function toAbsoluteUrl(u?: string | null) {
+function toAbsoluteUrl(u?: string | null): string {
   if (!u) return "";
-  if (/^https?:\/\//i.test(u)) return u;             // ya es absoluta
-  if (typeof window !== "undefined") return `${window.location.origin}${u.startsWith("/") ? "" : "/"}${u}`;
-  return u; // fallback (SSR), pero este componente es client, así que casi no entra aquí
+  if (/^https?:\/\//i.test(u)) return u;
+  if (typeof window !== "undefined") {
+    const leading = u.startsWith("/") ? "" : "/";
+    return `${window.location.origin}${leading}${u}`;
+  }
+  // Fallback (en SSR no lo usamos porque este componente es client)
+  return u;
+}
+
+function fileNameFromUrl(u: string): string {
+  try {
+    const p = new URL(u, "http://dummy/");
+    const parts = p.pathname.split("/");
+    return parts[parts.length - 1] || "video.mp4";
+  } catch {
+    const clean = u.split("?")[0].split("#")[0];
+    const parts = clean.split("/");
+    return parts[parts.length - 1] || "video.mp4";
+  }
 }
 
 export default function HoleByDatePage() {
@@ -21,28 +37,32 @@ export default function HoleByDatePage() {
   const router = useRouter();
   const holeNum = Number(hole);
 
-  const club = useMemo(() => clubs.find(c => c.slug === slug), [slug]);
+  const club = useMemo(() => clubs.find((c) => c.slug === slug), [slug]);
 
+  // Guardas de client component (en vez de notFound)
   useEffect(() => {
     if (!club || !Number.isFinite(holeNum) || holeNum < 1 || holeNum > 18) {
       router.replace("/recordings");
     }
   }, [club, holeNum, router]);
 
-  const [adDone, setAdDone] = useState(false);
-  const adSrc = `/ads/${slug}/${holeNum}.mp4`;
+  // --- Pre-roll ---
+  const adSrcRel = `/ads/${slug}/${holeNum}.mp4`;
+  const adSrcAbs = toAbsoluteUrl(adSrcRel);
+  const [adDone, setAdDone] = useState<boolean>(false);
 
+  // --- Datos de clips ---
   const [slots, setSlots] = useState<Slot<Clip>[]>([]);
   const [currentSlotKey, setCurrentSlotKey] = useState<string | null>(null);
   const [currentVideo, setCurrentVideo] = useState<Clip | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       setLoading(true);
       const clips = await getVideosForHoleByDate(slug, holeNum, date);
-      // 10 min por slot como lo tenías originalmente (ajusta si quieres)
+      // 10 min por slot como lo tenías antes
       const s = bucketVideosToSlots<Clip>(clips, { stepMin: 10, startHour: 5, endHour: 18 });
 
       if (!alive) return;
@@ -56,31 +76,62 @@ export default function HoleByDatePage() {
       }
       setLoading(false);
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [slug, holeNum, date]);
 
-  const currentSlot = slots.find(x => x.key === currentSlotKey) || null;
+  const currentSlot = useMemo(
+    () => slots.find((x) => x.key === currentSlotKey) || null,
+    [slots, currentSlotKey]
+  );
 
-  // URL final (absoluta) que debe ser un MP4 servido por nginx
-  const fileUrl = toAbsoluteUrl(currentVideo?.url);
+  // URL final (absoluta) del MP4
+  const fileUrl = useMemo(() => toAbsoluteUrl(currentVideo?.url), [currentVideo?.url]);
+
+  // Cache-buster (se regenera cuando cambia el clip)
+  const [cacheKey, setCacheKey] = useState<string>("");
+  useEffect(() => {
+    setCacheKey(currentVideo?.url ? String(Date.now()) : "");
+  }, [currentVideo?.url]);
+
+  const fileUrlWithBust = useMemo(
+    () => (fileUrl ? `${fileUrl}${fileUrl.includes("?") ? "&" : "?"}v=${cacheKey}` : ""),
+    [fileUrl, cacheKey]
+  );
+
+  const downloadFileName = useMemo(() => fileNameFromUrl(fileUrl), [fileUrl]);
+
+  const onPickSlot = useCallback(
+    (key: string) => {
+      setCurrentSlotKey(key);
+      const s = slots.find((ss) => ss.key === key);
+      setCurrentVideo(s?.items?.[0] ?? null);
+    },
+    [slots]
+  );
 
   return (
     <main className="min-h-screen bg-background text-foreground">
+      {/* Overlay del patrocinador */}
       {!adDone && (
         <PreRollAd
-          src={adSrc}
+          key={adSrcAbs}             // si cambias de hoyo/club forza a reiniciar ad
+          src={adSrcAbs}
           onDone={() => setAdDone(true)}
-          skippableLastSeconds={50}
+          skippableLastSeconds={50}  // como antes; si tu ad es corto, esto lo hace skippable casi de inmediato
         />
       )}
 
       <section className="max-w-6xl mx-auto px-4 py-10 space-y-6">
         <div>
           <h1 className="text-3xl font-bold">{club?.name} — Hoyo #{holeNum}</h1>
-          <p className="text-sm text-muted-foreground">{club?.city} • {date}</p>
+          <p className="text-sm text-muted-foreground">
+            {club?.city} • {date}
+          </p>
         </div>
 
-        {/* Slots */}
+        {/* Slots (10 min) */}
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Horarios con video</h2>
           {loading ? (
@@ -89,20 +140,17 @@ export default function HoleByDatePage() {
             <div className="text-muted-foreground">No hay videos para este hoyo en esta fecha.</div>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {slots.map(slot => {
+              {slots.map((slot) => {
                 const active = currentSlotKey === slot.key;
                 return (
                   <button
                     key={slot.key}
-                    onClick={() => {
-                      setCurrentSlotKey(slot.key);
-                      setCurrentVideo(slot.items[0] ?? null);
-                    }}
+                    onClick={() => onPickSlot(slot.key)}
                     className={[
                       "px-3 py-1.5 rounded-lg border text-sm transition",
                       active
                         ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-card hover:ring-1 hover:ring-primary/40"
+                        : "border-border bg-card hover:ring-1 hover:ring-primary/40",
                     ].join(" ")}
                   >
                     {slot.label} ({slot.items.length})
@@ -113,7 +161,7 @@ export default function HoleByDatePage() {
           )}
         </section>
 
-        {/* Player + lista */}
+        {/* Player + lista de clips del slot */}
         <section className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-3">
             <div className="text-sm text-muted-foreground">
@@ -121,47 +169,47 @@ export default function HoleByDatePage() {
             </div>
 
             <div className="aspect-video w-full rounded-xl border border-border bg-black/80 grid place-items-center text-white/60">
-              {currentVideo ? (
+              {currentVideo && fileUrlWithBust ? (
                 <video
-                  key={fileUrl}                   // fuerza recarga al cambiar clip
-                  src={fileUrl}
+                  key={fileUrlWithBust} // fuerza recarga al cambiar clip o cacheKey
+                  src={fileUrlWithBust}
                   controls
                   playsInline
                   preload="metadata"
                   className="w-full h-full rounded-xl"
                   onError={(e) => {
-                    // Te deja claro si falla la fuente:
-                    console.error("Video error. URL:", fileUrl, e);
-                    alert("No se pudo reproducir el video. Ver consola para detalles.");
+                    // Te deja claro si falla la fuente
+                    // (útil si vuelve a haber problemas de caché o ruta)
+                    // eslint-disable-next-line no-console
+                    console.error("Video error. URL:", fileUrlWithBust, e);
+                    alert("No se pudo reproducir el video. Reintenta o verifica la URL en consola.");
                   }}
                 >
-                  <source src={fileUrl} type="video/mp4" />
+                  <source src={fileUrlWithBust} type="video/mp4" />
                 </video>
               ) : (
                 "Sin selección"
               )}
             </div>
 
-            {/* Descargar clip seleccionado */}
+            {/* Acción: descargar clip seleccionado */}
             <div className="flex items-center gap-3">
               <a
-                href={fileUrl}
-                download
+                href={fileUrlWithBust || "#"}
+                download={downloadFileName}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={[
                   "inline-flex items-center justify-center px-4 py-2 rounded-lg",
                   "bg-primary text-primary-foreground hover:opacity-90 transition",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background",
-                  !currentVideo && "pointer-events-none opacity-50"
+                  !currentVideo && "pointer-events-none opacity-50",
                 ].join(" ")}
               >
                 Descargar video
               </a>
               {currentVideo?.label && (
-                <span className="text-xs text-muted-foreground">
-                  {currentVideo.label}
-                </span>
+                <span className="text-xs text-muted-foreground">{currentVideo.label}</span>
               )}
             </div>
           </div>
@@ -180,7 +228,7 @@ export default function HoleByDatePage() {
                           "w-full flex items-center gap-3 p-2 rounded-lg border text-left transition bg-card",
                           active
                             ? "border-primary bg-primary/10"
-                            : "border-border hover:ring-1 hover:ring-primary/40"
+                            : "border-border hover:ring-1 hover:ring-primary/40",
                         ].join(" ")}
                       >
                         {clip.thumb && (
