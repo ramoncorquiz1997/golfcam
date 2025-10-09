@@ -63,7 +63,7 @@ export default function HoleByDatePage() {
       setLoading(true);
       const clips = await getVideosForHoleByDate(slug, holeNum, date);
       // 10 min por slot como lo tenías antes
-      const s = bucketVideosToSlots<Clip>(clips, { stepMin: 10, startHour: 5, endHour: 18 });
+      const s = bucketVideosToSlots<Clip>(clips, { stepMin: 10, startHour: 0, endHour: 24 });
 
       if (!alive) return;
       setSlots(s);
