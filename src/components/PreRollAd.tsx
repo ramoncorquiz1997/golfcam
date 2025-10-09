@@ -3,43 +3,44 @@
 import { useEffect, useRef, useState } from "react";
 
 type Props = {
-  src: string;                 // /sponsors/<slug>/hole-<n>.mp4
-  onDone: () => void;          // cerrar overlay al terminar / saltar
-  skippableLastSeconds?: number; // por defecto 10
+  src: string;                  // /sponsors/<slug>/hole-<n>.mp4
+  onDone: () => void;           // cerrar overlay al terminar / saltar
+  skippableLastSeconds?: number; // lo usaremos como "skippableAfterSeconds" (=10 por defecto)
 };
 
-export default function PreRollAd({ src, onDone, skippableLastSeconds = 10 }: Props) {
+export default function PreRollAd({
+  src,
+  onDone,
+  skippableLastSeconds = 10, // interpreta: se puede saltar DESPUÉS de N segundos desde el inicio
+}: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [canSkip, setCanSkip] = useState(false);
-  const [remaining, setRemaining] = useState<number | null>(null);
+  const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
 
-    // Fallback: permitir salto a los 10s pase lo que pase
-    const tenSecTimer = window.setTimeout(() => setCanSkip(true), 10_000);
-
     const onTime = () => {
-      // si hay duración válida, también se habilita cuando faltan N segundos
-      if (!Number.isFinite(v.duration) || v.duration <= 0) return;
-      const rem = Math.max(0, v.duration - v.currentTime);
-      setRemaining(rem);
-      if (rem <= skippableLastSeconds) setCanSkip(true);
+      setElapsed(v.currentTime || 0);
+      // habilita salto después de N segundos desde el inicio
+      if (v.currentTime >= skippableLastSeconds) setCanSkip(true);
     };
 
     const onEnded = () => onDone();
 
     const onCanPlay = () => {
-      // Autoplay suele requerir muted en móviles; si no quieres mutear, deja que el usuario de play.
-      // v.muted = true;  // descomenta si quieres forzar autoplay en móvil
-      v.play().catch(() => { /* el usuario tendrá que dar play */ });
+      // Autoplay fiable: muted + playsInline + autoplay en el tag
+      v.play().catch(() => {
+        // El usuario tendrá que dar click a play, pero seguirá contando tiempo
+      });
     };
 
     const onErr = () => {
       setError(true);
-      onDone(); // si falla el recurso, no bloquees la UI
+      // No bloquees si falla el recurso
+      onDone();
     };
 
     v.addEventListener("timeupdate", onTime);
@@ -47,12 +48,16 @@ export default function PreRollAd({ src, onDone, skippableLastSeconds = 10 }: Pr
     v.addEventListener("canplay", onCanPlay);
     v.addEventListener("error", onErr);
 
+    // Fallback: si por alguna razón no dispara timeupdate (autoplay bloqueado),
+    // arrancamos un temporizador que habilite el salto a los 10s desde montaje
+    const fallback = window.setTimeout(() => setCanSkip(true), skippableLastSeconds * 1000);
+
     return () => {
-      window.clearTimeout(tenSecTimer);
       v.removeEventListener("timeupdate", onTime);
       v.removeEventListener("ended", onEnded);
       v.removeEventListener("canplay", onCanPlay);
       v.removeEventListener("error", onErr);
+      window.clearTimeout(fallback);
     };
   }, [onDone, skippableLastSeconds]);
 
@@ -63,9 +68,7 @@ export default function PreRollAd({ src, onDone, skippableLastSeconds = 10 }: Pr
       <div className="w-[min(92vw,1000px)]">
         <div className="mb-3 flex items-center justify-between text-white/80 text-sm">
           <span>Anuncio del patrocinador</span>
-          {remaining !== null && (
-            <span>Quedan {Math.ceil(remaining)}s</span>
-          )}
+          <span>Transcurrido {Math.floor(elapsed)}s</span>
         </div>
 
         <div className="relative rounded-xl overflow-hidden border border-white/15 bg-black">
@@ -74,6 +77,8 @@ export default function PreRollAd({ src, onDone, skippableLastSeconds = 10 }: Pr
             src={src}
             controls
             playsInline
+            muted
+            autoPlay
             className="w-full h-full"
             style={{ maxHeight: "70vh" }}
           />
@@ -87,9 +92,9 @@ export default function PreRollAd({ src, onDone, skippableLastSeconds = 10 }: Pr
               ${canSkip
                 ? "bg-emerald-600 hover:bg-emerald-500 text-white"
                 : "bg-gray-600 text-white/70 cursor-not-allowed"}`}
-            title={canSkip ? "Saltar anuncio" : "Podrás saltar en 10s o cuando falten pocos segundos"}
+            title={canSkip ? "Saltar anuncio" : `Podrás saltar en ${skippableLastSeconds}s`}
           >
-            {canSkip ? "Saltar" : "Saltar (pronto)"}
+            {canSkip ? "Saltar" : `Saltar (${skippableLastSeconds}s)`}
           </button>
         </div>
       </div>
