@@ -18,7 +18,7 @@ const PUBLIC_RECORDINGS_PREFIX =
 
 function splitDate(date: string) {
   const [YYYY, MM, DD] = date.split("-");
-  return { yyyy: YYYY, mm: MM, d: String(parseInt(DD, 10)) };
+  return { yyyy: YYYY, mm: MM, d: String(parseInt(DD, 10)) }; // día sin cero a la izquierda
 }
 
 function hhmmssToHuman(hhmmss: string) {
@@ -45,10 +45,12 @@ export async function GET(
   try {
     entries = await fs.readdir(absDir);
   } catch {
-    return NextResponse.json([]); // no hay carpeta → sin clips
+    // no hay carpeta → sin clips
+    return NextResponse.json([]);
   }
 
   const clips: Clip[] = [];
+
   for (const name of entries) {
     const match = name.match(FILE_RE);
     if (!match) continue;
