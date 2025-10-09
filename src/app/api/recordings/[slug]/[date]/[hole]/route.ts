@@ -28,11 +28,14 @@ function hhmmssToHuman(hhmmss: string) {
 // Acepta: "HHMMSS.mp4" o "HHMMSS_tee.mp4" / "HHMMSS_green.mp4" / "HHMMSS_cam.mp4"
 const FILE_RE = /^(\d{6})(?:_(tee|green|cam))?\.mp4$/i;
 
-export async function GET(
-  _request: Request,
-  { params }: { params: { slug: string; date: string; hole: string } }
-) {
-  const { slug, date, hole } = params;
+// NO TIPES el 2º argumento; castea dentro para evitar el error de Next.
+export async function GET(_req: Request, ctx: unknown) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { slug, date, hole } = (ctx as any).params as {
+    slug: string;
+    date: string;
+    hole: string;
+  };
 
   const { yyyy, mm, d } = splitDate(date);
   const holeDir = `hole-${Number(hole)}`;
@@ -57,16 +60,15 @@ export async function GET(
 
     const url = `${PUBLIC_RECORDINGS_PREFIX}/${slug}/${holeDir}/${yyyy}/${mm}/${d}/${name}`;
     const label = `${pos === "clip" ? "CLIP" : pos.toUpperCase()} — ${ts}`;
-
     clips.push({ url, ts, label, pos, name });
   }
 
-  // Orden cronológico por nombre (HHMMSS[_pos].mp4)
+  // Cronológico por nombre (HHMMSS[_pos].mp4)
   clips.sort((a, b) => a.name.localeCompare(b.name));
 
   return NextResponse.json(clips);
 }
 
-// Asegura que no haya cacheo en Vercel/Next y siempre lea del FS
+// Forzar dinámico y sin revalidate para leer FS siempre
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
