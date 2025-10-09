@@ -1,86 +1,72 @@
-// src/lib/getData.ts
+// src/app/api/recordings/[slug]/[date]/[hole]/route.ts
+import { NextResponse } from "next/server";
+import path from "node:path";
+import { readdir } from "node:fs/promises";
 
-export type Clip = {
-  url: string;    // URL pública al mp4 (p. ej. /recordings/<club>/hole-<n>/<YYYY>/<MM>/<D>/<HHMMSS>.mp4)
-  ts: string;     // "HH:MM:SS"
-  label?: string; // "TEE — 14:30:43", etc.
-  name?: string;
-  thumb?: string; // opcional
+type Clip = {
+  url: string;
+  ts: string;       // "HH:MM:SS"
+  label: string;    // "TEE — 14:30:43" | "GREEN — 14:30:43" | "CAM — 14:30:43" | "CLIP — 14:30:43"
+  pos: "tee" | "green" | "cam" | "clip";
+  name: string;
 };
 
-/**
- * Construye la URL del endpoint que lista clips para un club/hoyo/fecha.
- * Ejemplo: /api/recordings/campestre-ensenada/2025-10-08/16
- */
-function apiUrlForHole(slug: string, date: string, hole: number): string {
-  const s = encodeURIComponent(slug);
-  const d = encodeURIComponent(date);
-  const h = Number.isFinite(hole) ? String(hole) : "";
-  return `/api/recordings/${s}/${d}/${h}`;
+const RECORDINGS_BASE =
+  process.env.RECORDINGS_BASE || "/var/www/golfcam/site/golfcam/public/recordings";
+const PUBLIC_RECORDINGS_PREFIX =
+  process.env.PUBLIC_RECORDINGS_PREFIX || "/recordings";
+
+function splitDate(date: string) {
+  const [YYYY, MM, DD] = date.split("-");
+  return { yyyy: YYYY, mm: MM, d: String(parseInt(DD, 10)) };
 }
 
-/**
- * Obtiene los clips reales para un club/hoyo/fecha.
- * Llama a la API server-side que lee el filesystem del droplet.
- *
- * - slug: club, p.ej. "campestre-ensenada"
- * - hole: número (1..18) → carpeta "hole-<n>"
- * - date: "YYYY-MM-DD" (la API traduce a YYYY/MM/D en FS)
- */
-export async function getVideosForHoleByDate(
-  slug: string,
-  hole: number,
-  date: string
-): Promise<Clip[]> {
+function hhmmssToHuman(hhmmss: string) {
+  return `${hhmmss.slice(0, 2)}:${hhmmss.slice(2, 4)}:${hhmmss.slice(4, 6)}`;
+}
+
+// Acepta: "HHMMSS.mp4" o "HHMMSS_tee.mp4" / "HHMMSS_green.mp4" / "HHMMSS_cam.mp4"
+const FILE_RE = /^(\d{6})(?:_(tee|green|cam))?\.mp4$/i;
+
+export async function GET(
+  _request: Request,
+  { params }: { params: { slug: string; date: string; hole: string } }
+) {
+  const { slug, date, hole } = params;
+
+  const { yyyy, mm, d } = splitDate(date);
+  const holeDir = `hole-${Number(hole)}`;
+  const absDir = path.join(RECORDINGS_BASE, slug, holeDir, yyyy, mm, d);
+
+  let entries: string[] = [];
   try {
-    if (!slug || !date || !Number.isFinite(hole)) return [];
-
-    const url = apiUrlForHole(slug, date, hole);
-
-    const res = await fetch(url, {
-      // Muy importante para que **no** cachee y siempre lea del FS
-      cache: "no-store",
-      // Next 13/14/15 admite esta opción para forzar no revalidar
-      next: { revalidate: 0 },
-      headers: {
-        // Cabezera inofensiva para evitar proxys intermedios cacheando
-        "x-no-store": "1",
-      },
-    });
-
-    if (!res.ok) {
-      if (typeof window !== "undefined") {
-        // eslint-disable-next-line no-console
-        console.error("getVideosForHoleByDate: respuesta no OK", res.status, res.statusText);
-      }
-      return [];
-    }
-
-    const data = (await res.json()) as unknown;
-
-    if (!Array.isArray(data)) return [];
-
-    // Validación mínima de shape
-    const safe: Clip[] = [];
-    for (const item of data) {
-      const it = item as Partial<Clip>;
-      if (typeof it?.url === "string" && typeof it?.ts === "string") {
-        safe.push({
-          url: it.url,
-          ts: it.ts,
-          label: typeof it.label === "string" ? it.label : undefined,
-          name: typeof it.name === "string" ? it.name : undefined,
-          thumb: typeof it.thumb === "string" ? it.thumb : undefined,
-        });
-      }
-    }
-
-    return safe;
-  } catch (err) {
-    if (typeof window !== "undefined") {
-      // eslint-disable-next-line no-console
-      console.error("getVideosForHoleByDate: error de fetch", err);
-    }
-    return [];
+    entries = await readdir(absDir);
+  } catch {
+    // no hay carpeta → sin clips
+    return NextResponse.json([]);
   }
+
+  const clips: Clip[] = [];
+  for (const name of entries) {
+    const match = name.match(FILE_RE);
+    if (!match) continue;
+
+    const hhmmss = match[1];
+    const pos: Clip["pos"] = match[2] ? (match[2].toLowerCase() as Clip["pos"]) : "clip";
+    const ts = hhmmssToHuman(hhmmss);
+
+    const url = `${PUBLIC_RECORDINGS_PREFIX}/${slug}/${holeDir}/${yyyy}/${mm}/${d}/${name}`;
+    const label = `${pos === "clip" ? "CLIP" : pos.toUpperCase()} — ${ts}`;
+
+    clips.push({ url, ts, label, pos, name });
+  }
+
+  // Orden cronológico por nombre (HHMMSS[_pos].mp4)
+  clips.sort((a, b) => a.name.localeCompare(b.name));
+
+  return NextResponse.json(clips);
 }
+
+// Asegura que no haya cacheo en Vercel/Next y siempre lea del FS
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
