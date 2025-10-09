@@ -1,9 +1,10 @@
+// src/app/recordings/[slug]/[date]/[hole]/page.tsx
 "use client";
 
 import Image from "next/image";
 import clubs from "@/data/clubs.json";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { bucketVideosToSlots, type Slot } from "@/lib/timeSlots";
 import { getVideosForHoleByDate, type Clip } from "@/lib/getData";
 import PreRollAd from "@/components/PreRollAd";
@@ -13,24 +14,22 @@ export default function HoleByDatePage() {
   const router = useRouter();
   const holeNum = Number(hole);
 
-  const club = useMemo(() => clubs.find((c) => c.slug === slug), [slug]);
+  const club = useMemo(() => clubs.find(c => c.slug === slug), [slug]);
 
+  // Guardas de client component (en vez de notFound)
   useEffect(() => {
     if (!club || !Number.isFinite(holeNum) || holeNum < 1 || holeNum > 18) {
       router.replace("/recordings");
     }
   }, [club, holeNum, router]);
 
-  const [adDone, setAdDone] = useState(false);
+  const [adDone, setAdDone] = useState(false); // anuncio debe verse siempre
   const adSrc = `/ads/${slug}/${holeNum}.mp4`;
 
   const [slots, setSlots] = useState<Slot<Clip>[]>([]);
   const [currentSlotKey, setCurrentSlotKey] = useState<string | null>(null);
   const [currentVideo, setCurrentVideo] = useState<Clip | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [needsTap, setNeedsTap] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -50,48 +49,32 @@ export default function HoleByDatePage() {
       }
       setLoading(false);
     })();
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, [slug, holeNum, date]);
 
-  const currentSlot = slots.find((x) => x.key === currentSlotKey) || null;
+  const currentSlot = slots.find(x => x.key === currentSlotKey) || null;
 
-  useEffect(() => {
-    setNeedsTap(false);
-    const el = videoRef.current;
-    if (!el) return;
-    try {
-      el.load();
-    } catch {}
-    const tryPlay = async () => {
-      try {
-        await el.play();
-      } catch {
-        setNeedsTap(true);
-      }
-    };
-    if (adDone && currentVideo) {
-      tryPlay();
-    }
-  }, [currentVideo, adDone]);
-
-  const downloadUrl = currentVideo?.url ?? "";
+  // URL para descarga: prioriza original si existe
+  const downloadUrl = currentVideo?.url ?? currentVideo?.url ?? "";
 
   return (
     <main className="min-h-screen bg-background text-foreground">
+      {/* Overlay del patrocinador (bloquea todo hasta cerrar/saltar) */}
       {!adDone && (
-        <PreRollAd src={adSrc} onDone={() => setAdDone(true)} skippableLastSeconds={50} />
+        <PreRollAd
+          src={adSrc}
+          onDone={() => setAdDone(true)}
+          skippableLastSeconds={50}
+        />
       )}
 
       <section className="max-w-6xl mx-auto px-4 py-10 space-y-6">
         <div>
           <h1 className="text-3xl font-bold">{club?.name} — Hoyo #{holeNum}</h1>
-          <p className="text-sm text-muted-foreground">
-            {club?.city} • {date}
-          </p>
+          <p className="text-sm text-muted-foreground">{club?.city} • {date}</p>
         </div>
 
+        {/* Slots (10 min) */}
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Horarios con video</h2>
           {loading ? (
@@ -100,7 +83,7 @@ export default function HoleByDatePage() {
             <div className="text-muted-foreground">No hay videos para este hoyo en esta fecha.</div>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {slots.map((slot) => {
+              {slots.map(slot => {
                 const active = currentSlotKey === slot.key;
                 return (
                   <button
@@ -113,7 +96,7 @@ export default function HoleByDatePage() {
                       "px-3 py-1.5 rounded-lg border text-sm transition",
                       active
                         ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-card hover:ring-1 hover:ring-primary/40",
+                        : "border-border bg-card hover:ring-1 hover:ring-primary/40"
                     ].join(" ")}
                   >
                     {slot.label} ({slot.items.length})
@@ -124,81 +107,44 @@ export default function HoleByDatePage() {
           )}
         </section>
 
+        {/* Player + lista de clips del slot */}
         <section className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-3">
             <div className="text-sm text-muted-foreground">
               {currentSlot ? `Reproduciendo: ${currentSlot.label}` : "Selecciona un horario"}
             </div>
 
-            <div className="relative aspect-video w-full rounded-xl border border-border bg-black/80 grid place-items-center text-white/60">
+            <div className="aspect-video w-full rounded-xl border border-border bg-black/80 grid place-items-center text-white/60">
               {currentVideo ? (
-                <>
-                  <video
-                    ref={videoRef}
-                    key={currentVideo.url}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    className="w-full h-full rounded-xl"
-                    onError={(e) => {
-                      const el = e.currentTarget;
-                      const err = el.error; // MediaError | null
-                      const code = err?.code ?? 0;
-                      const codeNameMap: Record<number, string> = {
-                        1: "ABORTED",
-                        2: "NETWORK",
-                        3: "DECODE",
-                        4: "SRC_NOT_SUPPORTED",
-                      };
-                      const codeName = codeNameMap[code] ?? "UNKNOWN";
-                      // Log para depurar si hay clips incompatibles
-                      console.error("Error reproduciendo video", {
-                        src: currentVideo.url,
-                        code,
-                        codeName,
-                      });
-                    }}
-                  >
-                    <source src={currentVideo.url} type="video/mp4" />
-                    Tu navegador no puede reproducir este video.
-                  </video>
-
-                  {needsTap && (
-                    <button
-                      onClick={async () => {
-                        setNeedsTap(false);
-                        try {
-                          await videoRef.current?.play();
-                        } catch {
-                          setNeedsTap(true);
-                        }
-                      }}
-                      className="absolute inset-0 m-auto h-12 w-44 rounded-lg bg-white/10 text-white border border-white/20 backdrop-blur-sm"
-                    >
-                      Tocar para reproducir
-                    </button>
-                  )}
-                </>
+                <video
+                  key={currentVideo.url}
+                  src={currentVideo.url}
+                  controls
+                  className="w-full h-full rounded-xl"
+                />
               ) : (
                 "Sin selección"
               )}
             </div>
 
+            {/* Acción: descargar clip seleccionado */}
             <div className="flex items-center gap-3">
               <a
-                href={downloadUrl || "#"}
+                href={downloadUrl}
                 download
                 className={[
                   "inline-flex items-center justify-center px-4 py-2 rounded-lg",
                   "bg-primary text-primary-foreground hover:opacity-90 transition",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background",
-                  !currentVideo && "pointer-events-none opacity-50",
+                  !currentVideo && "pointer-events-none opacity-50"
                 ].join(" ")}
               >
                 Descargar video
               </a>
               {currentVideo?.label && (
-                <span className="text-xs text-muted-foreground">{currentVideo.label}</span>
+                <span className="text-xs text-muted-foreground">
+                  {currentVideo.label}
+                </span>
               )}
             </div>
           </div>
@@ -217,7 +163,7 @@ export default function HoleByDatePage() {
                           "w-full flex items-center gap-3 p-2 rounded-lg border text-left transition bg-card",
                           active
                             ? "border-primary bg-primary/10"
-                            : "border-border hover:ring-1 hover:ring-primary/40",
+                            : "border-border hover:ring-1 hover:ring-primary/40"
                         ].join(" ")}
                       >
                         {clip.thumb && (
