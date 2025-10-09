@@ -18,21 +18,19 @@ const PUBLIC_RECORDINGS_PREFIX =
 
 function splitDate(date: string) {
   const [YYYY, MM, DD] = date.split("-");
-  return { yyyy: YYYY, mm: MM, d: String(parseInt(DD, 10)) }; // día sin cero a la izquierda
+  return { yyyy: YYYY, mm: MM, d: String(parseInt(DD, 10)) };
 }
 
 function hhmmssToHuman(hhmmss: string) {
   return `${hhmmss.slice(0, 2)}:${hhmmss.slice(2, 4)}:${hhmmss.slice(4, 6)}`;
 }
 
-// Acepta: "HHMMSS.mp4"  o  "HHMMSS_tee.mp4" / "HHMMSS_green.mp4" / "HHMMSS_cam.mp4"
+// Acepta: "HHMMSS.mp4" o "HHMMSS_tee.mp4" / "HHMMSS_green.mp4" / "HHMMSS_cam.mp4"
 const FILE_RE = /^(\d{6})(?:_(tee|green|cam))?\.mp4$/i;
 
-export async function GET(
-  _request: Request,
-  { params }: { params: { slug: string; date: string; hole: string } }
-) {
-  const { slug, date, hole } = params;
+// ⚠️ No tipamos el segundo argumento para evitar el error del verificador de Next
+export async function GET(_request: Request, context: any) {
+  const { slug, date, hole } = context.params as { slug: string; date: string; hole: string };
 
   const { yyyy, mm, d } = splitDate(date);
   const holeDir = `hole-${Number(hole)}`;
@@ -53,23 +51,22 @@ export async function GET(
     if (!match) continue;
 
     const hhmmss = match[1];
-    // pos puede ser "tee" | "green" | "cam" cuando viene en el nombre; si no, es "clip"
     const pos: Clip["pos"] = match[2] ? (match[2].toLowerCase() as Clip["pos"]) : "clip";
     const ts = hhmmssToHuman(hhmmss);
 
-    const url = `${PUBLIC_RECORDINGS_PREFIX}/${slug}/${holeDir}/${yyyy}/${mm}/${d}/${name}`;
-    const label = `${pos === "clip" ? "CLIP" : pos.toUpperCase()} — ${ts}`;
+    const urlStr = `${PUBLIC_RECORDINGS_PREFIX}/${slug}/${holeDir}/${yyyy}/${mm}/${d}/${name}`;
+    const labelStr = `${pos === "clip" ? "CLIP" : pos.toUpperCase()} — ${ts}`;
 
     clips.push({
-      url,
+      url: urlStr,
       ts,
-      label,
+      label: labelStr,
       pos,
       name,
     });
   }
 
-  // Orden cronológico por nombre (HHMMSS*.mp4)
+  // Orden cronológico por nombre (HHMMSS[_pos].mp4)
   clips.sort((a, b) => a.name.localeCompare(b.name));
 
   return NextResponse.json(clips);
