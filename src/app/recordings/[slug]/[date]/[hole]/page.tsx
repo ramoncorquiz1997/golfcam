@@ -1,10 +1,9 @@
-// src/app/recordings/[slug]/[date]/[hole]/page.tsx
 "use client";
 
 import Image from "next/image";
 import clubs from "@/data/clubs.json";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { bucketVideosToSlots, type Slot } from "@/lib/timeSlots";
 import { getVideosForHoleByDate, type Clip } from "@/lib/getData";
 import PreRollAd from "@/components/PreRollAd";
@@ -14,16 +13,16 @@ export default function HoleByDatePage() {
   const router = useRouter();
   const holeNum = Number(hole);
 
-  const club = useMemo(() => clubs.find(c => c.slug === slug), [slug]);
+  const club = useMemo(() => clubs.find((c) => c.slug === slug), [slug]);
 
-  // Guardas de client component (en vez de notFound)
+  // Guardas (si algo no cuadra, regresa al índice)
   useEffect(() => {
     if (!club || !Number.isFinite(holeNum) || holeNum < 1 || holeNum > 18) {
       router.replace("/recordings");
     }
   }, [club, holeNum, router]);
 
-  const [adDone, setAdDone] = useState(false); // anuncio debe verse siempre
+  const [adDone, setAdDone] = useState(false);
   const adSrc = `/ads/${slug}/${holeNum}.mp4`;
 
   const [slots, setSlots] = useState<Slot<Clip>[]>([]);
@@ -31,10 +30,15 @@ export default function HoleByDatePage() {
   const [currentVideo, setCurrentVideo] = useState<Clip | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Video ref para manejar play tras interacción si el navegador lo exige
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [needsTap, setNeedsTap] = useState(false);
+
   useEffect(() => {
     let alive = true;
     (async () => {
       setLoading(true);
+      // Usamos slots de 60min para agrupar por hora del día (tú lo tenías así).
       const clips = await getVideosForHoleByDate(slug, holeNum, date);
       const s = bucketVideosToSlots<Clip>(clips, { stepMin: 60, startHour: 0, endHour: 24 });
 
@@ -49,32 +53,54 @@ export default function HoleByDatePage() {
       }
       setLoading(false);
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [slug, holeNum, date]);
 
-  const currentSlot = slots.find(x => x.key === currentSlotKey) || null;
+  const currentSlot = slots.find((x) => x.key === currentSlotKey) || null;
 
-  // URL para descarga: prioriza original si existe
-  const downloadUrl = currentVideo?.url ?? currentVideo?.url ?? "";
+  // Cada vez que cambia el video, intentamos reproducir y si falla pedimos interacción
+  useEffect(() => {
+    setNeedsTap(false);
+    const el = videoRef.current;
+    if (!el) return;
+    // Forzamos “load()” para refrescar metadata y rangos
+    try {
+      el.load();
+    } catch {}
+    const tryPlay = async () => {
+      try {
+        await el.play();
+      } catch {
+        // Algunos navegadores requieren interacción del usuario
+        setNeedsTap(true);
+      }
+    };
+    // Autoplay sólo si no hay overlay de anuncio
+    if (adDone && currentVideo) {
+      tryPlay();
+    }
+  }, [currentVideo, adDone]);
+
+  const downloadUrl = currentVideo?.url ?? "";
 
   return (
     <main className="min-h-screen bg-background text-foreground">
       {/* Overlay del patrocinador (bloquea todo hasta cerrar/saltar) */}
       {!adDone && (
-        <PreRollAd
-          src={adSrc}
-          onDone={() => setAdDone(true)}
-          skippableLastSeconds={50}
-        />
+        <PreRollAd src={adSrc} onDone={() => setAdDone(true)} skippableLastSeconds={50} />
       )}
 
       <section className="max-w-6xl mx-auto px-4 py-10 space-y-6">
         <div>
           <h1 className="text-3xl font-bold">{club?.name} — Hoyo #{holeNum}</h1>
-          <p className="text-sm text-muted-foreground">{club?.city} • {date}</p>
+          <p className="text-sm text-muted-foreground">
+            {club?.city} • {date}
+          </p>
         </div>
 
-        {/* Slots (10 min) */}
+        {/* Slots (agrupación) */}
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Horarios con video</h2>
           {loading ? (
@@ -83,7 +109,7 @@ export default function HoleByDatePage() {
             <div className="text-muted-foreground">No hay videos para este hoyo en esta fecha.</div>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {slots.map(slot => {
+              {slots.map((slot) => {
                 const active = currentSlotKey === slot.key;
                 return (
                   <button
@@ -96,7 +122,7 @@ export default function HoleByDatePage() {
                       "px-3 py-1.5 rounded-lg border text-sm transition",
                       active
                         ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-card hover:ring-1 hover:ring-primary/40"
+                        : "border-border bg-card hover:ring-1 hover:ring-primary/40",
                     ].join(" ")}
                   >
                     {slot.label} ({slot.items.length})
@@ -114,14 +140,49 @@ export default function HoleByDatePage() {
               {currentSlot ? `Reproduciendo: ${currentSlot.label}` : "Selecciona un horario"}
             </div>
 
-            <div className="aspect-video w-full rounded-xl border border-border bg-black/80 grid place-items-center text-white/60">
+            <div className="relative aspect-video w-full rounded-xl border border-border bg-black/80 grid place-items-center text-white/60">
               {currentVideo ? (
-                <video
-                  key={currentVideo.url}
-                  src={currentVideo.url}
-                  controls
-                  className="w-full h-full rounded-xl"
-                />
+                <>
+                  <video
+                    ref={videoRef}
+                    key={currentVideo.url}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="w-full h-full rounded-xl"
+                    onError={(e) => {
+                      const el = e.currentTarget;
+                      // Log visible en consola para diagnosticar si llega a fallar el decode
+                      // (por ejemplo si un clip vino en HEVC/10bit sin transcodificar)
+                      console.error("Error reproduciendo video:", {
+                        src: currentVideo.url,
+                        error:
+                          (el.error && (el.error as any).message) ||
+                          el.error ||
+                          "unknown",
+                      });
+                    }}
+                  >
+                    <source src={currentVideo.url} type="video/mp4" />
+                    Tu navegador no puede reproducir este video.
+                  </video>
+
+                  {needsTap && (
+                    <button
+                      onClick={async () => {
+                        setNeedsTap(false);
+                        try {
+                          await videoRef.current?.play();
+                        } catch {
+                          setNeedsTap(true);
+                        }
+                      }}
+                      className="absolute inset-0 m-auto h-12 w-44 rounded-lg bg-white/10 text-white border border-white/20 backdrop-blur-sm"
+                    >
+                      Tocar para reproducir
+                    </button>
+                  )}
+                </>
               ) : (
                 "Sin selección"
               )}
@@ -130,21 +191,19 @@ export default function HoleByDatePage() {
             {/* Acción: descargar clip seleccionado */}
             <div className="flex items-center gap-3">
               <a
-                href={downloadUrl}
+                href={downloadUrl || "#"}
                 download
                 className={[
                   "inline-flex items-center justify-center px-4 py-2 rounded-lg",
                   "bg-primary text-primary-foreground hover:opacity-90 transition",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background",
-                  !currentVideo && "pointer-events-none opacity-50"
+                  !currentVideo && "pointer-events-none opacity-50",
                 ].join(" ")}
               >
                 Descargar video
               </a>
               {currentVideo?.label && (
-                <span className="text-xs text-muted-foreground">
-                  {currentVideo.label}
-                </span>
+                <span className="text-xs text-muted-foreground">{currentVideo.label}</span>
               )}
             </div>
           </div>
@@ -163,7 +222,7 @@ export default function HoleByDatePage() {
                           "w-full flex items-center gap-3 p-2 rounded-lg border text-left transition bg-card",
                           active
                             ? "border-primary bg-primary/10"
-                            : "border-border hover:ring-1 hover:ring-primary/40"
+                            : "border-border hover:ring-1 hover:ring-primary/40",
                         ].join(" ")}
                       >
                         {clip.thumb && (
