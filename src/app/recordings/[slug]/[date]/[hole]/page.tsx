@@ -15,7 +15,6 @@ export default function HoleByDatePage() {
 
   const club = useMemo(() => clubs.find((c) => c.slug === slug), [slug]);
 
-  // Guardas (si algo no cuadra, regresa al índice)
   useEffect(() => {
     if (!club || !Number.isFinite(holeNum) || holeNum < 1 || holeNum > 18) {
       router.replace("/recordings");
@@ -30,7 +29,6 @@ export default function HoleByDatePage() {
   const [currentVideo, setCurrentVideo] = useState<Clip | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Video ref para manejar play tras interacción si el navegador lo exige
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [needsTap, setNeedsTap] = useState(false);
 
@@ -38,7 +36,6 @@ export default function HoleByDatePage() {
     let alive = true;
     (async () => {
       setLoading(true);
-      // Usamos slots de 60min para agrupar por hora del día (tú lo tenías así).
       const clips = await getVideosForHoleByDate(slug, holeNum, date);
       const s = bucketVideosToSlots<Clip>(clips, { stepMin: 60, startHour: 0, endHour: 24 });
 
@@ -60,12 +57,10 @@ export default function HoleByDatePage() {
 
   const currentSlot = slots.find((x) => x.key === currentSlotKey) || null;
 
-  // Cada vez que cambia el video, intentamos reproducir y si falla pedimos interacción
   useEffect(() => {
     setNeedsTap(false);
     const el = videoRef.current;
     if (!el) return;
-    // Forzamos “load()” para refrescar metadata y rangos
     try {
       el.load();
     } catch {}
@@ -73,11 +68,9 @@ export default function HoleByDatePage() {
       try {
         await el.play();
       } catch {
-        // Algunos navegadores requieren interacción del usuario
         setNeedsTap(true);
       }
     };
-    // Autoplay sólo si no hay overlay de anuncio
     if (adDone && currentVideo) {
       tryPlay();
     }
@@ -87,7 +80,6 @@ export default function HoleByDatePage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      {/* Overlay del patrocinador (bloquea todo hasta cerrar/saltar) */}
       {!adDone && (
         <PreRollAd src={adSrc} onDone={() => setAdDone(true)} skippableLastSeconds={50} />
       )}
@@ -100,7 +92,6 @@ export default function HoleByDatePage() {
           </p>
         </div>
 
-        {/* Slots (agrupación) */}
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Horarios con video</h2>
           {loading ? (
@@ -133,7 +124,6 @@ export default function HoleByDatePage() {
           )}
         </section>
 
-        {/* Player + lista de clips del slot */}
         <section className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-3">
             <div className="text-sm text-muted-foreground">
@@ -152,14 +142,20 @@ export default function HoleByDatePage() {
                     className="w-full h-full rounded-xl"
                     onError={(e) => {
                       const el = e.currentTarget;
-                      // Log visible en consola para diagnosticar si llega a fallar el decode
-                      // (por ejemplo si un clip vino en HEVC/10bit sin transcodificar)
-                      console.error("Error reproduciendo video:", {
+                      const err = el.error; // MediaError | null
+                      const code = err?.code ?? 0;
+                      const codeNameMap: Record<number, string> = {
+                        1: "ABORTED",
+                        2: "NETWORK",
+                        3: "DECODE",
+                        4: "SRC_NOT_SUPPORTED",
+                      };
+                      const codeName = codeNameMap[code] ?? "UNKNOWN";
+                      // Log para depurar si hay clips incompatibles
+                      console.error("Error reproduciendo video", {
                         src: currentVideo.url,
-                        error:
-                          (el.error && (el.error as any).message) ||
-                          el.error ||
-                          "unknown",
+                        code,
+                        codeName,
                       });
                     }}
                   >
@@ -188,7 +184,6 @@ export default function HoleByDatePage() {
               )}
             </div>
 
-            {/* Acción: descargar clip seleccionado */}
             <div className="flex items-center gap-3">
               <a
                 href={downloadUrl || "#"}
