@@ -16,7 +16,6 @@ function toAbsoluteUrl(u?: string | null): string {
     const leading = u.startsWith("/") ? "" : "/";
     return `${window.location.origin}${leading}${u}`;
   }
-  // Fallback (en SSR no lo usamos porque este componente es client)
   return u;
 }
 
@@ -39,7 +38,7 @@ export default function HoleByDatePage() {
 
   const club = useMemo(() => clubs.find((c) => c.slug === slug), [slug]);
 
-  // Guardas de client component (en vez de notFound)
+  // Guardas
   useEffect(() => {
     if (!club || !Number.isFinite(holeNum) || holeNum < 1 || holeNum > 18) {
       router.replace("/recordings");
@@ -62,7 +61,6 @@ export default function HoleByDatePage() {
     (async () => {
       setLoading(true);
       const clips = await getVideosForHoleByDate(slug, holeNum, date);
-      // 10 min por slot como lo tenías antes
       const s = bucketVideosToSlots<Clip>(clips, { stepMin: 10, startHour: 0, endHour: 24 });
 
       if (!alive) return;
@@ -119,7 +117,7 @@ export default function HoleByDatePage() {
           key={adSrcAbs}             // si cambias de hoyo/club forza a reiniciar ad
           src={adSrcAbs}
           onDone={() => setAdDone(true)}
-          skippableLastSeconds={50}  // como antes; si tu ad es corto, esto lo hace skippable casi de inmediato
+          skippableLastSeconds={10}  // <<< SOLO ESTO: podrás saltar en los últimos 10s
         />
       )}
 
@@ -171,15 +169,13 @@ export default function HoleByDatePage() {
             <div className="aspect-video w-full rounded-xl border border-border bg-black/80 grid place-items-center text-white/60">
               {currentVideo && fileUrlWithBust ? (
                 <video
-                  key={fileUrlWithBust} // fuerza recarga al cambiar clip o cacheKey
+                  key={fileUrlWithBust}
                   src={fileUrlWithBust}
                   controls
                   playsInline
                   preload="metadata"
                   className="w-full h-full rounded-xl"
                   onError={(e) => {
-                    // Te deja claro si falla la fuente
-                    // (útil si vuelve a haber problemas de caché o ruta)
                     // eslint-disable-next-line no-console
                     console.error("Video error. URL:", fileUrlWithBust, e);
                     alert("No se pudo reproducir el video. Reintenta o verifica la URL en consola.");
