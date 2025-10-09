@@ -28,9 +28,9 @@ function hhmmssToHuman(hhmmss: string) {
 // Acepta: "HHMMSS.mp4" o "HHMMSS_tee.mp4" / "HHMMSS_green.mp4" / "HHMMSS_cam.mp4"
 const FILE_RE = /^(\d{6})(?:_(tee|green|cam))?\.mp4$/i;
 
-// ⚠️ No tipamos el segundo argumento para evitar el error del verificador de Next
-export async function GET(_request: Request, context: any) {
-  const { slug, date, hole } = context.params as { slug: string; date: string; hole: string };
+export async function GET(_request: Request, context: unknown) {
+  // Cast seguro sin usar "any"
+  const { slug, date, hole } = (context as { params: { slug: string; date: string; hole: string } }).params;
 
   const { yyyy, mm, d } = splitDate(date);
   const holeDir = `hole-${Number(hole)}`;
@@ -40,8 +40,7 @@ export async function GET(_request: Request, context: any) {
   try {
     entries = await fs.readdir(absDir);
   } catch {
-    // no hay carpeta → sin clips
-    return NextResponse.json([]);
+    return NextResponse.json([]); // no hay carpeta → sin clips
   }
 
   const clips: Clip[] = [];
