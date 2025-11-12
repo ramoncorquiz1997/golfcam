@@ -3,6 +3,11 @@ import { NextResponse } from "next/server";
 import path from "node:path";
 import fs from "node:fs/promises";
 
+// Fuerza ejecución en Node y que no se congele como estático
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type Clip = {
   url: string;
   ts: string;    // "HH:MM:SS"
@@ -11,7 +16,7 @@ type Clip = {
 };
 
 const RECORDINGS_BASE =
-  process.env.RECORDINGS_BASE || "/opt/clipsazo/golfcam/public/recordings";
+  process.env.RECORDINGS_BASE || "/opt/clipsazo/golfcam/recordings";
 const PUBLIC_RECORDINGS_PREFIX =
   process.env.PUBLIC_RECORDINGS_PREFIX || "/recordings";
 
@@ -21,11 +26,10 @@ const hhmmssToHuman = (s: string) =>
 
 export async function GET(
   _req: Request,
-  ctx: { params: Promise<{ slug: string; date: string; court: string }> }
+  { params }: { params: { slug: string; date: string; court: string } }
 ) {
-  const { slug, date, court } = await ctx.params;
+  const { slug, date, court } = params;
 
-  // Nueva estructura: <base>/<slug>/<YYYY-MM-DD>/<court>/
   const absDir = path.join(RECORDINGS_BASE, slug, date, court);
 
   let entries: string[] = [];
@@ -49,5 +53,9 @@ export async function GET(
   }
 
   clips.sort((a, b) => a.name.localeCompare(b.name));
-  return NextResponse.json(clips);
+  return NextResponse.json(clips, {
+    headers: {
+      "Cache-Control": "no-store, max-age=0",
+    },
+  });
 }
