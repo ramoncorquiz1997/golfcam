@@ -24,7 +24,7 @@ export default function CourtByDatePage() {
   }, [club, courtData, date, router]);
 
   const [adDone, setAdDone] = useState(false);
-  const adSrc = `golfcam/public/ads/${slug}/${court}.mp4`;
+  const adSrc = `/ads/${slug}/${court}.mp4`;
 
   const [slots, setSlots] = useState<Slot<Clip>[]>([]);
   const [currentSlotKey, setCurrentSlotKey] = useState<string | null>(null);
