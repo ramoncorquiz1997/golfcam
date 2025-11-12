@@ -11,7 +11,7 @@ print(f"[INFO] Conectando a BD: {DB_URL}")
 print(f"[INFO] Leyendo JSON desde: {JSON_PATH}")
 
 # ========= CONEXIÓN =========
-+ conn = psycopg.connect(DB_URL)
+conn = psycopg.connect(DB_URL)
 cur = conn.cursor()
 
 with open(JSON_PATH, "r", encoding="utf-8") as f:
