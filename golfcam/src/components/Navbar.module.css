@@ -1,0 +1,92 @@
+/* ===== Navbar.module.css ===== */
+
+.header{
+  /* color base #FA560B */
+  --brand-r: 250;
+  --brand-g: 86;
+  --brand-b: 11;
+
+  /* alpha viene de inline style; si no llega, usa .86 */
+  --alpha: .86;
+
+  /* tamaños */
+  --logo-h-d: 50px;  /* logo desktop */
+  --logo-h-m: 60px;  /* logo móvil */
+  --pad-y: 10px;
+
+  position: sticky;
+  top: 0;
+  inset-inline: 0;
+  z-index: 1000;
+
+  background: linear-gradient(
+    180deg,
+    rgba(var(--brand-r),var(--brand-g),var(--brand-b), var(--alpha)) 0%,
+    rgba(var(--brand-r),var(--brand-g),var(--brand-b), calc(var(--alpha) - .06)) 100%
+  );
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  border-bottom: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 6px 22px rgba(0,0,0,.22);
+  transition: background .18s ease, box-shadow .18s ease;
+}
+
+.container{
+  width: 100%;
+  margin: 0;
+  padding: var(--pad-y) clamp(24px, 4vw, 48px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Logo */
+.logo{ display:inline-flex; align-items:center; gap:10px; text-decoration:none; }
+.logoImg{ height: var(--logo-h-d); width:auto; display:block; }
+.logoImgIcon{ display:none; height: var(--logo-h-m); width:auto; }
+
+@media (max-width:768px){
+  .logoImg{ display:none; }
+  .logoImgIcon{ display:block; }
+}
+
+/* Nav desktop */
+.navDesktop{ display:flex; align-items:center; gap:40px; }
+.link{
+  color:#fff; text-decoration:none; font-weight:800; font-size:1.12rem;
+  letter-spacing:.2px; text-shadow:0 1px 0 rgba(0,0,0,.08);
+  transition: opacity .2s ease, transform .2s ease;
+}
+.link:hover{ opacity:.92; transform:translateY(-1px); }
+
+/* Burger móvil */
+.burger{ display:none; background:transparent; border:0; color:#fff; padding:6px; }
+.icon{ display:block; }
+@media (max-width:1024px){ .navDesktop{ display:none; } .burger{ display:inline-flex; } }
+
+/* Menú móvil */
+.mobileWrap{
+  position: fixed;
+  inset: calc(var(--logo-h-m) + var(--pad-y) * 2) 0 auto 0;
+  height: calc(100vh - (var(--logo-h-m) + var(--pad-y) * 2));
+  background: rgba(var(--brand-r), var(--brand-g), var(--brand-b), .94);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display:none;
+}
+.open{ display:block; }
+.navMobile{ display:grid; gap:14px; padding:16px; }
+.mobileLink{
+  color:#fff; text-decoration:none; font-weight:700; font-size:1.05rem;
+  padding:12px 10px; border-radius:10px; background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
+}
+.mobileLink:active{ background:rgba(255,255,255,.12); }
+
+/* Estado “shrink” al hacer scroll */
+.shrink{
+  --logo-h-d: 56px;     /* baja el tamaño del logo */
+  --alpha: .78;         /* un poco más transparente */
+  box-shadow: 0 4px 16px rgba(0,0,0,.18);
+}

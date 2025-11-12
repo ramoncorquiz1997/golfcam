@@ -1,0 +1,178 @@
+// src/app/recordings/[slug]/[date]/[court]/page.tsx
+"use client";
+
+import Image from "next/image";
+import clubs from "@/data/clubs.json";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { bucketVideosToSlots, type Slot } from "@/lib/timeSlots";
+import { getVideosForCourtByDate, type Clip } from "@/lib/getData";
+import PreRollAd from "@/components/PreRollAd";
+
+type Court = { slug: string; name: string; image?: string };
+type Club  = { slug: string; name: string; city: string; courts?: Court[] };
+
+export default function CourtByDatePage() {
+  const { slug, date, court } = useParams() as { slug: string; date: string; court: string };
+  const router = useRouter();
+
+  const club = useMemo(() => (clubs as Club[]).find(c => c.slug === slug), [slug]);
+  const courtData = useMemo(() => club?.courts?.find(ct => ct.slug === court), [club, court]);
+
+  useEffect(() => {
+    if (!club || !courtData || typeof date !== "string") router.replace("/recordings");
+  }, [club, courtData, date, router]);
+
+  const [adDone, setAdDone] = useState(false);
+  const adSrc = `/ads/${slug}/${court}.mp4`;
+
+  const [slots, setSlots] = useState<Slot<Clip>[]>([]);
+  const [currentSlotKey, setCurrentSlotKey] = useState<string | null>(null);
+  const [currentVideo, setCurrentVideo] = useState<Clip | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (!club || !courtData) return;
+      setLoading(true);
+
+      const clips = await getVideosForCourtByDate(slug, court, date);
+      const s = bucketVideosToSlots<Clip>(clips, { stepMin: 60, startHour: 0, endHour: 24 });
+
+      if (!alive) return;
+      setSlots(s);
+
+      if (s.length) {
+        const lastSlot = s[s.length - 1];
+        setCurrentSlotKey(lastSlot.key);
+        setCurrentVideo(lastSlot.items[lastSlot.items.length - 1] ?? null);
+      } else {
+        setCurrentSlotKey(null);
+        setCurrentVideo(null);
+      }
+
+      setLoading(false);
+    })();
+    return () => { alive = false; };
+  }, [slug, court, date, club, courtData]);
+
+  const currentSlot = slots.find(x => x.key === currentSlotKey) || null;
+  const downloadUrl = currentVideo?.url ?? "";
+
+  return (
+    <main className="min-h-screen bg-background text-foreground">
+      {!adDone && (
+        <PreRollAd
+          src={adSrc}
+          onDone={() => setAdDone(true)}
+          skippableAfter={10}
+          label={`Patrocinio de la cancha ${courtData?.name ?? ""}`}
+        />
+      )}
+
+      <section className="max-w-6xl mx-auto px-4 py-10 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">{club?.name} — {courtData?.name}</h1>
+          <p className="text-sm text-muted-foreground">{club?.city} • {date}</p>
+        </div>
+
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Horarios con video</h2>
+          {loading ? (
+            <div className="text-muted-foreground">Cargando…</div>
+          ) : slots.length === 0 ? (
+            <div className="text-muted-foreground">No hay videos para esta cancha en esta fecha.</div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {slots.map(slot => {
+                const active = currentSlotKey === slot.key;
+                return (
+                  <button
+                    key={slot.key}
+                    onClick={() => {
+                      setCurrentSlotKey(slot.key);
+                      setCurrentVideo(slot.items[0] ?? null);
+                    }}
+                    className={[
+                      "px-3 py-1.5 rounded-lg border text-sm transition",
+                      active
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-card hover:ring-1 hover:ring-primary/40"
+                    ].join(" ")}
+                  >
+                    {slot.label} ({slot.items.length})
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        <section className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-3">
+            <div className="text-sm text-muted-foreground">
+              {currentSlot ? `Reproduciendo: ${currentSlot.label}` : "Selecciona un horario"}
+            </div>
+
+            <div className="aspect-video w-full rounded-xl border border-border bg-black/80 grid place-items-center text-white/60">
+              {currentVideo ? (
+                <video key={currentVideo.url} src={currentVideo.url} controls className="w-full h-full rounded-xl" />
+              ) : ("Sin selección")}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <a
+                href={downloadUrl}
+                download
+                className={[
+                  "inline-flex items-center justify-center px-4 py-2 rounded-lg",
+                  "bg-primary text-primary-foreground hover:opacity-90 transition",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background",
+                  !currentVideo && "pointer-events-none opacity-50"
+                ].join(" ")}
+              >
+                Descargar video
+              </a>
+              {currentVideo?.label && (
+                <span className="text-xs text-muted-foreground">{currentVideo.label}</span>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="font-semibold">Clips en este horario</h3>
+            {currentSlot && currentSlot.items.length > 0 ? (
+              <ul className="space-y-2">
+                {currentSlot.items.map((clip) => {
+                  const active = currentVideo?.url === clip.url;
+                  return (
+                    <li key={clip.url}>
+                      <button
+                        onClick={() => setCurrentVideo(clip)}
+                        className={[
+                          "w-full flex items-center gap-3 p-2 rounded-lg border text-left transition bg-card",
+                          active ? "border-primary bg-primary/10" : "border-border hover:ring-1 hover:ring-primary/40"
+                        ].join(" ")}
+                      >
+                        {clip.thumb && (
+                          <Image src={clip.thumb} alt="" width={64} height={40} className="object-cover rounded" />
+                        )}
+                        <div className="text-sm">
+                          <div className="font-medium">{clip.label ?? "Clip"}</div>
+                          <div className="text-muted-foreground">{clip.ts}</div>
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <div className="text-muted-foreground text-sm">No hay clips en este horario.</div>
+            )}
+          </div>
+        </section>
+      </section>
+    </main>
+  );
+}

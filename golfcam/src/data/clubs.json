@@ -1,0 +1,63 @@
+[
+  {
+    "slug": "palmas-padel",
+    "name": "Palmas Padel",
+    "city": "Ensenada",
+    "state": "Baja California",
+    "country": "México",
+    "lat": 31.84915,
+    "lon": -116.61130,
+    "image": "images/clubs/palmas_padel.jpg",
+    "courts": [
+      { "slug": "cancha_1", "name": "Cancha Phone Center", "image": "images/canchas/phone_center_palmas.jpg" },
+      { "slug": "cancha_2", "name": "Cancha Mar and Grill", "image": "images/canchas/mar_and_grill_palmas.jpg" }
+    ]
+  },
+  {
+    "slug": "padel-place",
+    "name": "Padel Place",
+    "city": "Mazatlán",
+    "state": "Sinaloa",
+    "country": "México",
+    "lat": 23.280271,
+    "lon": -106.447461,
+    "image": "images/clubs/padel_place.jpg",
+    "courts": [
+      { "slug": "central", "name": "Central", "image": "images/canchas/central.jpg" },
+      { "slug": "norte", "name": "Norte", "image": "images/canchas/norte.jpg" },
+      { "slug": "cristal-1", "name": "Cristal 1", "image": "images/canchas/cristal_1.jpg" }
+    ]
+  },
+  {
+    "slug": "padel-world-marina",
+    "name": "Padel World Marina",
+    "city": "Mazatlán",
+    "state": "Sinaloa",
+    "country": "México",
+    "lat": 23.271737,
+    "lon": -106.447988,
+    "image": "images/clubs/padel_world_marina.jpg",
+    "courts": [
+      { "slug": "central", "name": "Central", "image": "images/canchas/central.jpg" },
+      { "slug": "norte", "name": "Norte", "image": "images/canchas/norte.jpg" },
+      { "slug": "cristal-1", "name": "Cristal 1", "image": "images/canchas/cristal_1.jpg" }
+    ]
+  },
+  {
+    "slug": "wolf-padel",
+    "name": "Wolf Padel",
+    "city": "Guadalajara",
+    "state": "Jalisco",
+    "country": "México",
+    "lat": 20.713027,
+    "lon": -103.334716,
+    "image": "images/clubs/wolf_padel_gdl.jpg",
+    "courts": [
+      { "slug": "central", "name": "Central", "image": "images/canchas/central.jpg" },
+      { "slug": "norte", "name": "Norte", "image": "images/canchas/norte.jpg" },
+      { "slug": "cristal-1", "name": "Cristal 1", "image": "images/canchas/cristal_1.jpg" },
+      { "slug": "cristal-2", "name": "Cristal 2", "image": "images/canchas/cristal_2.jpg" }
+    ]
+
+  }
+]
