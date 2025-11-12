@@ -3,11 +3,6 @@ import { NextResponse } from "next/server";
 import path from "node:path";
 import fs from "node:fs/promises";
 
-// Fuerza ejecución en Node y que no se congele como estático
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 type Clip = {
   url: string;
   ts: string;    // "HH:MM:SS"
@@ -26,10 +21,11 @@ const hhmmssToHuman = (s: string) =>
 
 export async function GET(
   _req: Request,
-  { params }: { params: { slug: string; date: string; court: string } }
+  ctx: { params: Promise<{ slug: string; date: string; court: string }> }
 ) {
-  const { slug, date, court } = params;
+  const { slug, date, court } = await ctx.params;
 
+  // Nueva estructura: <base>/<slug>/<YYYY-MM-DD>/<court>/
   const absDir = path.join(RECORDINGS_BASE, slug, date, court);
 
   let entries: string[] = [];
@@ -53,9 +49,5 @@ export async function GET(
   }
 
   clips.sort((a, b) => a.name.localeCompare(b.name));
-  return NextResponse.json(clips, {
-    headers: {
-      "Cache-Control": "no-store, max-age=0",
-    },
-  });
+  return NextResponse.json(clips);
 }
