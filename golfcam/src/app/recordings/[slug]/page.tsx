@@ -10,7 +10,10 @@ export default function ClubDatePickerPage() {
   const router = useRouter();
 
   const club = useMemo(() => clubs.find(c => c.slug === slug), [slug]);
-  const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  });
   if (!club) {
     // notFound() no funciona en client; redirige o muestra fallback
     router.replace("/recordings");
