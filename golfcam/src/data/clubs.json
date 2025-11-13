@@ -9,10 +9,10 @@
     "lon": -116.657822,
     "image": "images/clubs/san_marino_padel.jpg",
     "courts": [
-      { "slug": "cancha_1", "name": "Cancha 1", "image": null },
-      { "slug": "cancha_2", "name": "Cancha 2", "image": null },
+      { "slug": "cancha_1", "name": "Cancha 1", "image": "images/canchas/default.jpg" },
+      { "slug": "cancha_2", "name": "Cancha 2", "image": "images/canchas/default.jpg" },
       { "slug": "vitrocar", "name": "Vitrocar", "image": "images/canchas/vitrocar_san_marino.jpg" },
-      { "slug": "cancha_4", "name": "Cancha 4", "image": null },
+      { "slug": "cancha_4", "name": "Cancha 4", "image": "images/canchas/default.jpg" },
       { "slug": "xochicalco", "name": "Xochicalco", "image": "images/canchas/xochicalco_san_marino.jpg" }
     ]
   },
