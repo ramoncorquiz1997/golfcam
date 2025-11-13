@@ -1,5 +1,22 @@
 [
   {
+    "slug": "san-marino-padel",
+    "name": "San Marino Padel",
+    "city": "Ensenada",
+    "state": "Baja California",
+    "country": "México",
+    "lat": 31.86772,
+    "lon": -116.657822,
+    "image": "images/clubs/san_marino_padel.jpg",
+    "courts": [
+      { "slug": "cancha_1", "name": "Cancha 1", "image": "" },
+      { "slug": "cancha_2", "name": "Cancha 2", "image": "" },
+      { "slug": "vitrocar", "name": "Vitrocar", "image": "" },
+      { "slug": "cancha_4", "name": "Cancha 4", "image": "" },
+      { "slug": "xochicalco", "name": "Xochicalco", "image": "" }
+    ]
+  },
+  {
     "slug": "palmas-padel",
     "name": "Palmas Padel",
     "city": "Ensenada",
