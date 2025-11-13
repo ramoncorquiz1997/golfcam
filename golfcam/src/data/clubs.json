@@ -9,11 +9,11 @@
     "lon": -116.657822,
     "image": "images/clubs/san_marino_padel.jpg",
     "courts": [
-      { "slug": "cancha_1", "name": "Cancha 1", "image": "" },
-      { "slug": "cancha_2", "name": "Cancha 2", "image": "" },
-      { "slug": "vitrocar", "name": "Vitrocar", "image": "" },
-      { "slug": "cancha_4", "name": "Cancha 4", "image": "" },
-      { "slug": "xochicalco", "name": "Xochicalco", "image": "" }
+      { "slug": "cancha_1", "name": "Cancha 1", "image": null },
+      { "slug": "cancha_2", "name": "Cancha 2", "image": null },
+      { "slug": "vitrocar", "name": "Vitrocar", "image": "images/canchas/vitrocar_san_marino.jpg" },
+      { "slug": "cancha_4", "name": "Cancha 4", "image": null },
+      { "slug": "xochicalco", "name": "Xochicalco", "image": "images/canchas/xochicalco_san_marino.jpg" }
     ]
   },
   {
@@ -75,6 +75,5 @@
       { "slug": "cristal-1", "name": "Cristal 1", "image": "images/canchas/cristal_1.jpg" },
       { "slug": "cristal-2", "name": "Cristal 2", "image": "images/canchas/cristal_2.jpg" }
     ]
-
   }
 ]
