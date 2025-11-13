@@ -1,3 +1,4 @@
+// src/components/PreRollAd.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -6,7 +7,7 @@ type Props = {
   src: string; // ruta completa del video: /ads/<slug>/<hole|court>.mp4
   onDone: () => void; // callback para cerrar overlay
   skippableAfter?: number; // segundos tras los cuales se puede saltar (default 10)
-  label?: string; // texto opcional: “Anuncio del patrocinador”, “Patrocinio de la cancha”, etc.
+  label?: string; // texto opcional
 };
 
 export default function PreRollAd({
@@ -24,56 +25,58 @@ export default function PreRollAd({
     const v = videoRef.current;
     if (!v) return;
 
-    let rafId = 0;
-
-    const tick = () => {
-      try {
-        setElapsed(v.currentTime || 0);
-        if (!canSkip && v.currentTime >= skippableAfter) {
-          setCanSkip(true);
-        }
-      } finally {
-        rafId = requestAnimationFrame(tick);
+    const onTimeUpdate = () => {
+      const t = v.currentTime || 0;
+      setElapsed(t);
+      if (t >= skippableAfter) {
+        setCanSkip(true);
       }
     };
 
     const tryAutoplay = () => {
-      v.play().catch(() => {});
+      v.play().catch(() => {
+        // si el navegador bloquea autoplay, el usuario tendrá que darle play,
+        // pero igual el timeupdate empezará a contar cuando se reproduzca
+      });
     };
 
     const onPlay = () => {
-      if (!rafId) rafId = requestAnimationFrame(tick);
+      // no necesitamos RAF, sólo aseguramos que si el user le da play, ya estamos escuchando
     };
+
     const onPause = () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = 0;
+      // nada especial que hacer aquí
     };
+
     const onEnded = () => {
       setCanSkip(true);
       onDone();
     };
+
     const onErr = () => {
       console.warn("[PreRollAd] Error loading ad:", src);
       setError(true);
       onDone(); // si falla el anuncio, no bloqueamos
     };
 
+    v.addEventListener("timeupdate", onTimeUpdate);
     v.addEventListener("play", onPlay);
     v.addEventListener("pause", onPause);
     v.addEventListener("ended", onEnded);
     v.addEventListener("error", onErr);
     v.addEventListener("loadedmetadata", tryAutoplay);
+
     tryAutoplay();
 
     return () => {
-      if (rafId) cancelAnimationFrame(rafId);
+      v.removeEventListener("timeupdate", onTimeUpdate);
       v.removeEventListener("play", onPlay);
       v.removeEventListener("pause", onPause);
       v.removeEventListener("ended", onEnded);
       v.removeEventListener("error", onErr);
       v.removeEventListener("loadedmetadata", tryAutoplay);
     };
-  }, [onDone, skippableAfter, canSkip, src]);
+  }, [src, onDone, skippableAfter]);
 
   if (error) return null;
 
