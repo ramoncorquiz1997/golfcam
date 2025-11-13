@@ -141,12 +141,18 @@ export default function Home() {
 
         <div className="mt-8 grid gap-6 sm:grid-cols-2 md:grid-cols-3">
           {clubs.slice(0, 3).map((c) => (
-            <div
+            <Link
               key={c.slug}
+              href={`/recordings/${c.slug}`}
               className="group rounded-3xl bg-foreground/[0.07] p-2 backdrop-blur-sm transition-colors duration-300 hover:bg-foreground/[0.1]"
             >
-              <ClubCard {...c} />
-            </div>
+              <ClubCard
+                name={c.name}
+                city={c.city}
+                image={c.image}
+                slug={c.slug}
+              />
+            </Link>
           ))}
         </div>
       </section>
