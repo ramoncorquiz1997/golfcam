@@ -18,7 +18,7 @@
   },
   {
     "slug": "pacifico-padel",
-    "name": "Pacifico Padel",
+    "name": "Pacífico Padel",
     "city": "Ensenada",
     "state": "Baja California",
     "country": "México",
@@ -26,8 +26,15 @@
     "lon": -116.61130,
     "image": "images/clubs/pacifico_padel.jpg",
     "courts": [
-      { "slug": "cancha_1", "name": "Cancha Phone Center", "image": "images/canchas/phone_center_palmas.jpg" },
-      { "slug": "cancha_2", "name": "Cancha Mar and Grill", "image": "images/canchas/mar_and_grill_palmas.jpg" }
+      { "slug": "cerveza-papas-beer", "name": "Cancha Cerveza Papas & Beer", "image": "images/canchas/cerveza_papas_beer_pacifico.jpg" },
+      { "slug": "rossini-distribuidora", "name": "Cancha Rossini Distribuidora", "image": "images/canchas/rossini_pacifico.jpg" },
+      { "slug": "ramirez-logistics", "name": "Cancha In Ramírez Logistics", "image": "images/canchas/inramirez_logistics_pacifico.jpg" },
+      { "slug": "pasteleria-lourdes", "name": "Cancha Pastelería Lourdes", "image": "images/canchas/lourdes_pacifico.jpg" },
+      { "slug": "padel-o-que-club", "name": "Cancha PÁDEL ¿ o qué ? CLUB", "image": "images/canchas/default.jpg" },
+      { "slug": "luxerma-dermatologia", "name": "Cancha Luxerma Dermatología", "image": "images/canchas/luxerma_pacifico.jpg" },
+      { "slug": "sardinera-puerto", "name": "Cancha Sardinera del Puerto", "image": "images/canchas/default.jpg" },
+      { "slug": "deli-loop", "name": "Cancha Deli Loop", "image": "images/canchas/delilopp_pacifico.jpg" },
+      { "slug": "pacifico-padel-club", "name": "Cancha Pacífico Padel Club", "image": "images/canchas/pacifico_padel.jpg" }
     ]
   }
 ]
