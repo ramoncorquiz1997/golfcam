@@ -1,4 +1,4 @@
 [
-    { "id": "ens-otono", "title": "Torneo de ", "club": "Palmas Padel", "date": "2025-11-15", "cta": "#", "status": "preregistro" },
-    { "id": "bajamar-proam", "title": "Pro-Am Bajamar", "club": "Bajamar Golf (La Misión)", "date": "2025-11-08", "cta": "#", "status":"abierto"}
+    { "id": "ens-otono", "title": "Torneo de Padel Juvenil ", "club": "Palmas Padel", "date": "2025-11-15", "cta": "#", "status": "preregistro" },
+    { "id": "padelnoret-pro", "title": "PadelNorte Pro Torneo", "club": "Padel Norte", "date": "2025-11-08", "cta": "#", "status":"abierto"}
   ]
