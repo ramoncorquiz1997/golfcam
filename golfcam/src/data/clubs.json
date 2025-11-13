@@ -26,15 +26,15 @@
     "lon": -116.61130,
     "image": "images/clubs/pacifico_padel.jpg",
     "courts": [
-      { "slug": "cerveza-papas-beer_pacifico", "name": "Cancha Cerveza Papas & Beer", "image": "images/canchas/cerveza_papas_beer_pacifico.jpg" },
-      { "slug": "rossini-distribuidora_pacifico", "name": "Cancha Rossini Distribuidora", "image": "images/canchas/rossini_pacifico.jpg" },
-      { "slug": "ramirez-logistics_pacifico", "name": "Cancha In Ramírez Logistics", "image": "images/canchas/inramirez_logistics_pacifico.jpg" },
-      { "slug": "pasteleria-lourdes_pacifico", "name": "Cancha Pastelería Lourdes", "image": "images/canchas/lourdes_pacifico.jpg" },
-      { "slug": "padel-o-que-club_pacifico", "name": "Cancha PÁDEL ¿ o qué ? CLUB", "image": "images/canchas/default.jpg" },
-      { "slug": "luxerma-dermatologia_pacifico", "name": "Cancha Luxerma Dermatología", "image": "images/canchas/luxerma_pacifico.jpg" },
-      { "slug": "sardinera-puerto_pacifico", "name": "Cancha Sardinera del Puerto", "image": "images/canchas/default.jpg" },
-      { "slug": "deli-loop_pacifico", "name": "Cancha Deli Loop", "image": "images/canchas/delilopp_pacifico.jpg" },
-      { "slug": "pacifico-padel-club", "name": "Cancha Pacífico Padel Club", "image": "images/canchas/pacifico_padel.jpg" }
+      { "slug": "cerveza_papas-beer_pacifico", "name": "Cancha Cerveza Papas & Beer", "image": "images/canchas/cerveza_papas_beer_pacifico.jpg" },
+      { "slug": "rossini_distribuidora_pacifico", "name": "Cancha Rossini Distribuidora", "image": "images/canchas/rossini_pacifico.jpg" },
+      { "slug": "ramirez_logistics_pacifico", "name": "Cancha In Ramírez Logistics", "image": "images/canchas/inramirez_logistics_pacifico.jpg" },
+      { "slug": "pasteleria_lourdes_pacifico", "name": "Cancha Pastelería Lourdes", "image": "images/canchas/lourdes_pacifico.jpg" },
+      { "slug": "padel_o_que_club_pacifico", "name": "Cancha PÁDEL ¿ o qué ? CLUB", "image": "images/canchas/default.jpg" },
+      { "slug": "luxerma_dermatologia_pacifico", "name": "Cancha Luxerma Dermatología", "image": "images/canchas/luxerma_pacifico.jpg" },
+      { "slug": "sardinera_puerto_pacifico", "name": "Cancha Sardinera del Puerto", "image": "images/canchas/default.jpg" },
+      { "slug": "deliloop_pacifico", "name": "Cancha Deli Loop", "image": "images/canchas/delilopp_pacifico.jpg" },
+      { "slug": "pacifico_padel_club", "name": "Cancha Pacífico Padel Club", "image": "images/canchas/pacifico_padel.jpg" }
     ]
   }
 ]
