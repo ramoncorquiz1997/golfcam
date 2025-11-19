@@ -1,4 +1,5 @@
 // src/app/clubs/page.tsx
+import Link from "next/link";
 import ClubCard from "@/components/ClubCard";
 import { getClubs } from "@/lib/api";
 
@@ -18,13 +19,18 @@ export default async function ClubsPage() {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {clubs.map((c) => (
-            <ClubCard
+            <Link
               key={c.slug}
-              name={c.name}
-              city={[c.city, c.state].filter(Boolean).join(", ")}
-              image={c.image_url || c.image || "/clubs/default.jpg"}
-              slug={c.slug}
-            />
+              href={`/recordings/${c.slug}`}
+              className="group block"
+            >
+              <ClubCard
+                name={c.name}
+                city={[c.city, c.state].filter(Boolean).join(", ")}
+                image={c.image_url || c.image || "/clubs/default.jpg"}
+                slug={c.slug}
+              />
+            </Link>
           ))}
         </div>
       </section>
