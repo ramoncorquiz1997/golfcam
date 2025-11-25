@@ -1,9 +1,16 @@
-from typing import Any, Dict, Iterable, List, Tuple
+# clipsazo/routes/__init__.py
 
-def rows_to_dicts(cursor) -> List[Dict[str, Any]]:
-    cols = [c.name for c in cursor.description]
-    return [dict(zip(cols, row)) for row in cursor.fetchall()]
+from flask import Flask
 
-# Campos esperados:
-# clubs: id, slug, name, city, state, country, lat, lon, image_url, created_at
-# events: id, title, club_id, date_utc, status, cta_url, image_url, created_at
+# Importa tus blueprints individuales
+from .clubs import bp as clubs_bp
+# Más adelante aquí puedes agregar:
+# from .courts import bp as courts_bp
+# from .events import bp as events_bp
+
+def register_blueprints(app: Flask) -> None:
+    """Registra todos los blueprints en la app Flask."""
+    app.register_blueprint(clubs_bp)
+    # Cuando tengas más blueprints:
+    # app.register_blueprint(courts_bp)
+    # app.register_blueprint(events_bp)
