@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from ..db import get_conn
 from ..models import rows_to_dicts
 
-bp = Blueprint("clubs", __name__)
+bp = Blueprint("clubs", __name__, url_prefix="/api")
 
 @bp.get("/clubs")
 def list_clubs():
