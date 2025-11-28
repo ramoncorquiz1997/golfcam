@@ -4,21 +4,18 @@ import { getAdminTable, type AdminRow } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-interface AdminTablePageProps {
-  params: { table: string };
-  searchParams?: Record<string, string | string[] | undefined>;
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default async function AdminTablePage(props: any) {
+  const { table } = props.params as { table: string };
 
-export default async function AdminTablePage({ params }: AdminTablePageProps) {
-  const tableName = params.table;
-  const data = await getAdminTable(tableName, { limit: 50 });
+  const data = await getAdminTable(table, { limit: 50 });
   const rows = data.items;
   const columns = rows[0] ? Object.keys(rows[0] as AdminRow) : [];
 
   return (
     <main className="min-h-screen bg-background text-foreground p-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Admin DB — {tableName}</h1>
+        <h1 className="text-2xl font-bold">Admin DB — {table}</h1>
         <Link
           href="/admin/db"
           className="text-sm underline hover:no-underline"
