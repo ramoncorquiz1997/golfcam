@@ -1,7 +1,7 @@
 # clipsazo/routes/admin.py
 from flask import Blueprint, request, jsonify
 from ..db import get_conn
-from .models import rows_to_dicts  # ajusta el import según donde tengas rows_to_dicts
+from ..models import rows_to_dicts
 
 bp = Blueprint("admin", __name__, url_prefix="/api/admin")
 
