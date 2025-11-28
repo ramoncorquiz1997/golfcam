@@ -7,8 +7,7 @@ import {
   Marker,
   useMapEvents,
 } from "react-leaflet";
-import type { LatLngExpression } from "leaflet";
-import "leaflet/dist/leaflet.css";
+type LatLngExpression = [number, number];
 
 type MapPickerProps = {
   initialLat?: number | null;
