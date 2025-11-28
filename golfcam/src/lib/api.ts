@@ -98,6 +98,8 @@ export async function getClubs(
 
 // ---- Admin (management de tablas) ----
 
+// ---- Admin (management de tablas) ----
+
 export type AdminRow = Record<string, unknown>;
 
 export type AdminTableResponse = {
@@ -109,15 +111,23 @@ export type AdminTableResponse = {
 
 /** GET /api/admin/tables -> lista de tablas administrables */
 export async function getAdminTables(): Promise<string[]> {
-  if (!API) return [];
+  if (!API) {
+    console.warn("getAdminTables: API no configurada (NEXT_PUBLIC_API_URL)");
+    return [];
+  }
   try {
     const res = await fetch(`${API}/api/admin/tables`, {
       cache: "no-store",
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.error("getAdminTables HTTP", res.status);
+      return [];
+    }
     const data = await res.json();
+    console.log("ADMIN TABLES RAW", data);
     return (data.tables as string[]) ?? [];
-  } catch {
+  } catch (err) {
+    console.error("getAdminTables error", err);
     return [];
   }
 }
@@ -128,7 +138,9 @@ export async function getAdminTable(
   params: { limit?: number; offset?: number } = {},
 ): Promise<AdminTableResponse> {
   if (!API) {
-    throw new Error("API URL not configured (NEXT_PUBLIC_API_URL no está seteada)");
+    throw new Error(
+      "API URL not configured (NEXT_PUBLIC_API_URL no está seteada)",
+    );
   }
 
   const qs = toQuery(params);
@@ -136,9 +148,29 @@ export async function getAdminTable(
     name,
   )}?${qs.toString()}`;
 
+  console.log("getAdminTable URL", url);
+
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
   }
-  return res.json();
+
+  const data: any = await res.json();
+  console.log("ADMIN TABLE RAW DATA", data);
+
+  // Soportar 2 formatos:
+  // 1) { table, limit, offset, items: [...] }
+  // 2) [ { ... }, { ... } ]
+  const items: AdminRow[] = Array.isArray(data.items)
+    ? data.items
+    : Array.isArray(data)
+    ? data
+    : [];
+
+  return {
+    table: data.table ?? name,
+    limit: data.limit ?? params.limit ?? items.length,
+    offset: data.offset ?? 0,
+    items,
+  };
 }
