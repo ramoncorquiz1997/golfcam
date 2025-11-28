@@ -1,4 +1,6 @@
 // src/lib/api.ts
+
+// ---- Tipos base ----
 export type Club = {
   id?: number;
   slug: string;
@@ -12,9 +14,18 @@ export type Club = {
   image?: string | null; // compat con JSON viejo
 };
 
-export type ApiList<T> = { total: number; limit: number; offset: number; items: T[] };
+export type ApiList<T> = {
+  total: number;
+  limit: number;
+  offset: number;
+  items: T[];
+};
 
+// URL base del backend (sin slash final)
+// Ej: NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 const API = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+
+// ---- Helpers genéricos ----
 
 /** Fetch helper con ISR básico */
 async function fetchJSON<T>(url: string): Promise<T> {
@@ -34,23 +45,30 @@ function toQuery(params: Record<string, unknown>): URLSearchParams {
   return qs;
 }
 
+// ---- Clubs ----
+
 /** GET /api/clubs con fallback a JSON local + filtros */
-export async function getClubs(params: {
-  limit?: number;
-  offset?: number;
-  country?: string;
-  state?: string;
-  city?: string;
-  q?: string;
-} = {}): Promise<ApiList<Club>> {
+export async function getClubs(
+  params: {
+    limit?: number;
+    offset?: number;
+    country?: string;
+    state?: string;
+    city?: string;
+    q?: string;
+  } = {},
+): Promise<ApiList<Club>> {
   const qs = toQuery(params);
 
   // 1) Intenta API real
   if (API) {
     try {
-      return await fetchJSON<ApiList<Club>>(`${API}/api/clubs?${qs.toString()}`);
+      // Ej: http://127.0.0.1:8000/api/clubs?limit=100
+      return await fetchJSON<ApiList<Club>>(
+        `${API}/api/clubs?${qs.toString()}`,
+      );
     } catch {
-      // cae al fallback
+      // Si truena, cae al fallback local
     }
   }
 
@@ -59,17 +77,12 @@ export async function getClubs(params: {
 
   const needle = (params.q ?? "").trim().toLowerCase();
   const filtered = data.filter((c) => {
-    if (params.country && (c.country || "").trim() !== params.country) return false;
+    if (params.country && (c.country || "").trim() !== params.country)
+      return false;
     if (params.state && (c.state || "").trim() !== params.state) return false;
     if (params.city && (c.city || "").trim() !== params.city) return false;
     if (!needle) return true;
-    const haystack = [
-      c.name,
-      c.slug,
-      c.city,
-      c.state,
-      c.country,
-    ]
+    const haystack = [c.name, c.slug, c.city, c.state, c.country]
       .filter(Boolean)
       .join(" ")
       .toLowerCase();
@@ -81,4 +94,51 @@ export async function getClubs(params: {
   const items = filtered.slice(offset, offset + limit);
 
   return { total: filtered.length, limit, offset, items };
+}
+
+// ---- Admin (management de tablas) ----
+
+export type AdminRow = Record<string, unknown>;
+
+export type AdminTableResponse = {
+  table: string;
+  limit: number;
+  offset: number;
+  items: AdminRow[];
+};
+
+/** GET /api/admin/tables -> lista de tablas administrables */
+export async function getAdminTables(): Promise<string[]> {
+  if (!API) return [];
+  try {
+    const res = await fetch(`${API}/api/admin/tables`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.tables as string[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** GET /api/admin/table/:name -> filas de una tabla (solo lectura) */
+export async function getAdminTable(
+  name: string,
+  params: { limit?: number; offset?: number } = {},
+): Promise<AdminTableResponse> {
+  if (!API) {
+    throw new Error("API URL not configured (NEXT_PUBLIC_API_URL no está seteada)");
+  }
+
+  const qs = toQuery(params);
+  const url = `${API}/api/admin/table/${encodeURIComponent(
+    name,
+  )}?${qs.toString()}`;
+
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+  return res.json();
 }
