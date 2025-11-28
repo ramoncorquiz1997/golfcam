@@ -10,6 +10,7 @@ import {
   adminCreateClub,
   adminDeleteClub,
 } from "@/lib/api";
+import MapPicker from "@/components/MapPicker";
 
 type NewClubForm = {
   slug: string;
@@ -23,8 +24,8 @@ type NewClubForm = {
 };
 
 export default function AdminTablePage() {
-  const params = useParams();
-  const table = String(params.table ?? "");
+  const params = useParams<{ table: string }>();
+  const table = params.table;
 
   const [rows, setRows] = useState<AdminRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,6 +41,8 @@ export default function AdminTablePage() {
     lat: "",
     lon: "",
   });
+
+  const [showMap, setShowMap] = useState(false);
 
   const isClubs = table === "clubs";
 
@@ -91,9 +94,9 @@ export default function AdminTablePage() {
       return;
     }
 
-    const lat =
+    const latValue =
       newClub.lat.trim() === "" ? null : Number.parseFloat(newClub.lat);
-    const lon =
+    const lonValue =
       newClub.lon.trim() === "" ? null : Number.parseFloat(newClub.lon);
 
     try {
@@ -104,11 +107,10 @@ export default function AdminTablePage() {
         city: newClub.city.trim() || undefined,
         state: newClub.state.trim() || undefined,
         image_url: newClub.image_url.trim() || undefined,
-        lat: Number.isNaN(lat) ? null : lat,
-        lon: Number.isNaN(lon) ? null : lon,
+        lat: latValue === null || Number.isNaN(latValue) ? null : latValue,
+        lon: lonValue === null || Number.isNaN(lonValue) ? null : lonValue,
       });
 
-      // Limpia el form y recarga la tabla
       setNewClub({
         slug: "",
         name: "",
@@ -125,6 +127,26 @@ export default function AdminTablePage() {
       alert(String(err));
     }
   };
+
+  const handleOpenMap = () => {
+    setShowMap(true);
+  };
+
+  const handleCancelMap = () => {
+    setShowMap(false);
+  };
+
+  const handleSelectLocation = (lat: number, lon: number) => {
+    setNewClub((prev) => ({
+      ...prev,
+      lat: lat.toFixed(5),
+      lon: lon.toFixed(5),
+    }));
+    setShowMap(false);
+  };
+
+  const hasCoords =
+    newClub.lat.trim() !== "" && newClub.lon.trim() !== "";
 
   return (
     <main className="min-h-screen bg-background text-foreground p-6">
@@ -215,27 +237,38 @@ export default function AdminTablePage() {
               />
             </label>
 
-            <label className="flex flex-col text-xs gap-1">
-              <span>Lat</span>
-              <input
-                className="border rounded px-2 py-1 bg-background"
-                value={newClub.lat}
-                onChange={(e) =>
-                  setNewClub((prev) => ({ ...prev, lat: e.target.value }))
-                }
-              />
-            </label>
+            {/* Coordenadas con selector de mapa */}
+            <div className="flex flex-col text-xs gap-1 md:col-span-2 lg:col-span-3">
+              <span>Ubicación en mapa (Lat / Lon)</span>
+              <div className="flex flex-wrap items-center gap-2">
+                {hasCoords && (
+                  <div className="flex flex-wrap gap-2">
+                    <span className="px-2 py-1 rounded bg-muted">
+                      Lat: {newClub.lat}
+                    </span>
+                    <span className="px-2 py-1 rounded bg-muted">
+                      Lon: {newClub.lon}
+                    </span>
+                  </div>
+                )}
+                {!hasCoords && (
+                  <span className="text-[11px] text-muted-foreground">
+                    Aún no has elegido coordenadas.
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleOpenMap}
+                  className="px-3 py-1 rounded border text-[11px] md:text-xs hover:bg-accent"
+                >
+                  Elegir en mapa
+                </button>
+              </div>
 
-            <label className="flex flex-col text-xs gap-1">
-              <span>Lon</span>
-              <input
-                className="border rounded px-2 py-1 bg-background"
-                value={newClub.lon}
-                onChange={(e) =>
-                  setNewClub((prev) => ({ ...prev, lon: e.target.value }))
-                }
-              />
-            </label>
+              {/* Inputs ocultos con el valor real para el submit */}
+              <input type="hidden" value={newClub.lat} readOnly />
+              <input type="hidden" value={newClub.lon} readOnly />
+            </div>
 
             <div className="flex items-end">
               <button
@@ -314,6 +347,19 @@ export default function AdminTablePage() {
           </div>
         )}
       </section>
+
+      {showMap && (
+        <MapPicker
+          initialLat={
+            newClub.lat.trim() !== "" ? Number.parseFloat(newClub.lat) : undefined
+          }
+          initialLon={
+            newClub.lon.trim() !== "" ? Number.parseFloat(newClub.lon) : undefined
+          }
+          onCancel={handleCancelMap}
+          onSelect={handleSelectLocation}
+        />
+      )}
     </main>
   );
 }
