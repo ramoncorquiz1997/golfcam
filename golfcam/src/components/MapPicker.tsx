@@ -43,10 +43,10 @@ export default function MapPicker({
   ];
 
   const [currentLat, setCurrentLat] = useState<number>(
-    initialLat ?? 23.6345,
+    initialLat ?? 31.86017,
   );
   const [currentLon, setCurrentLon] = useState<number>(
-    initialLon ?? -102.5528,
+    initialLon ?? -116.60657,
   );
 
   const handleSetPosition = (lat: number, lon: number) => {
