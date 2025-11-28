@@ -21,9 +21,36 @@ export type ApiList<T> = {
   items: T[];
 };
 
-// URL base del backend (sin slash final)
-// Ej: NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
-const API = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+// ---- URLs base del backend ----
+
+// Detectar si estamos en el servidor (Next) o en el navegador
+const isServer = typeof window === "undefined";
+
+// Lo que ve el navegador (NEXT_PUBLIC_API_URL, viene de .env.local)
+const PUBLIC_API = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+
+// Lo que ve SOLO el servidor de Next (INTERNAL_API_URL, también en .env.local)
+const INTERNAL_API = isServer
+  ? process.env.INTERNAL_API_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8000"
+  : undefined;
+
+// API que debe usar cada entorno
+function getApiBaseOptional(): string | undefined {
+  if (isServer) {
+    return INTERNAL_API;
+  }
+  return PUBLIC_API;
+}
+
+function getApiBase(): string {
+  const base = getApiBaseOptional();
+  if (!base) {
+    throw new Error(
+      "API URL no configurada (NEXT_PUBLIC_API_URL / INTERNAL_API_URL)",
+    );
+  }
+  return base;
+}
 
 // ---- Helpers genéricos ----
 
@@ -59,13 +86,14 @@ export async function getClubs(
   } = {},
 ): Promise<ApiList<Club>> {
   const qs = toQuery(params);
+  const base = getApiBaseOptional();
 
-  // 1) Intenta API real
-  if (API) {
+  // 1) Intenta API real (si está configurada)
+  if (base) {
     try {
       // Ej: http://127.0.0.1:8000/api/clubs?limit=100
       return await fetchJSON<ApiList<Club>>(
-        `${API}/api/clubs?${qs.toString()}`,
+        `${base}/api/clubs?${qs.toString()}`,
       );
     } catch {
       // Si truena, cae al fallback local
@@ -113,12 +141,14 @@ type AdminTablesResponse = {
 
 /** GET /api/admin/tables -> lista de tablas administrables */
 export async function getAdminTables(): Promise<string[]> {
-  if (!API) {
-    console.warn("getAdminTables: API no configurada (NEXT_PUBLIC_API_URL)");
+  const base = getApiBaseOptional();
+  if (!base) {
+    console.warn("getAdminTables: API no configurada");
     return [];
   }
+
   try {
-    const res = await fetch(`${API}/api/admin/tables`, {
+    const res = await fetch(`${base}/api/admin/tables`, {
       cache: "no-store",
     });
     if (!res.ok) {
@@ -138,14 +168,10 @@ export async function getAdminTable(
   name: string,
   params: { limit?: number; offset?: number } = {},
 ): Promise<AdminTableResponse> {
-  if (!API) {
-    throw new Error(
-      "API URL not configured (NEXT_PUBLIC_API_URL no está seteada)",
-    );
-  }
+  const base = getApiBase(); // aquí sí exigimos API configurada
 
   const qs = toQuery(params);
-  const url = `${API}/api/admin/table/${encodeURIComponent(
+  const url = `${base}/api/admin/table/${encodeURIComponent(
     name,
   )}?${qs.toString()}`;
 
@@ -183,11 +209,8 @@ type AdminClubsListResponse = {
 
 /** (opcional) GET /api/admin/clubs */
 export async function adminListClubs(): Promise<AdminRow[]> {
-  if (!API) {
-    throw new Error("API URL no configurada");
-  }
-
-  const res = await fetch(`${API}/api/admin/clubs`, {
+  const base = getApiBase();
+  const res = await fetch(`${base}/api/admin/clubs`, {
     cache: "no-store",
   });
 
@@ -203,11 +226,9 @@ export async function adminListClubs(): Promise<AdminRow[]> {
 export async function adminCreateClub(
   input: ClubInput,
 ): Promise<AdminRow> {
-  if (!API) {
-    throw new Error("API URL no configurada");
-  }
+  const base = getApiBase();
 
-  const res = await fetch(`${API}/api/admin/clubs`, {
+  const res = await fetch(`${base}/api/admin/clubs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
@@ -224,11 +245,9 @@ export async function adminCreateClub(
 
 /** DELETE /api/admin/clubs/:id -> borra un club */
 export async function adminDeleteClub(id: number): Promise<void> {
-  if (!API) {
-    throw new Error("API URL no configurada");
-  }
+  const base = getApiBase();
 
-  const res = await fetch(`${API}/api/admin/clubs/${id}`, {
+  const res = await fetch(`${base}/api/admin/clubs/${id}`, {
     method: "DELETE",
   });
 
