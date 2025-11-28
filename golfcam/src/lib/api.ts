@@ -45,7 +45,7 @@ function toQuery(params: Record<string, unknown>): URLSearchParams {
   return qs;
 }
 
-// ---- Clubs ----
+// ---- Clubs (página pública /clubs) ----
 
 /** GET /api/clubs con fallback a JSON local + filtros */
 export async function getClubs(
@@ -96,7 +96,7 @@ export async function getClubs(
   return { total: filtered.length, limit, offset, items };
 }
 
-// ---- Admin (management de tablas) ----
+// ---- Admin (management de tablas genérico) ----
 
 export type AdminRow = Record<string, unknown>;
 
@@ -126,7 +126,6 @@ export async function getAdminTables(): Promise<string[]> {
       return [];
     }
     const data = (await res.json()) as AdminTablesResponse;
-    console.log("ADMIN TABLES RAW", data);
     return data.tables ?? [];
   } catch (err) {
     console.error("getAdminTables error", err);
@@ -150,20 +149,91 @@ export async function getAdminTable(
     name,
   )}?${qs.toString()}`;
 
-  console.log("getAdminTable URL", url);
-
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
   }
 
   const data = (await res.json()) as AdminTableResponse;
-  console.log("ADMIN TABLE RAW DATA", data);
 
   return {
-    table: data.table,
-    limit: data.limit,
-    offset: data.offset,
+    table: data.table ?? name,
+    limit: data.limit ?? params.limit ?? 50,
+    offset: data.offset ?? 0,
     items: data.items ?? [],
   };
+}
+
+// ---- Admin Clubs helpers (create/delete) ----
+
+export type ClubInput = {
+  slug: string;
+  name: string;
+  country: string;
+  city?: string;
+  state?: string;
+  image_url?: string;
+  lat?: number | null;
+  lon?: number | null;
+};
+
+type AdminClubsListResponse = {
+  items?: AdminRow[];
+};
+
+/** (opcional) GET /api/admin/clubs */
+export async function adminListClubs(): Promise<AdminRow[]> {
+  if (!API) {
+    throw new Error("API URL no configurada");
+  }
+
+  const res = await fetch(`${API}/api/admin/clubs`, {
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+
+  const data = (await res.json()) as AdminClubsListResponse;
+  return data.items ?? [];
+}
+
+/** POST /api/admin/clubs -> crea un club */
+export async function adminCreateClub(
+  input: ClubInput,
+): Promise<AdminRow> {
+  if (!API) {
+    throw new Error("API URL no configurada");
+  }
+
+  const res = await fetch(`${API}/api/admin/clubs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`Error al crear club: HTTP ${res.status} ${txt}`);
+  }
+
+  const data = (await res.json()) as AdminRow;
+  return data;
+}
+
+/** DELETE /api/admin/clubs/:id -> borra un club */
+export async function adminDeleteClub(id: number): Promise<void> {
+  if (!API) {
+    throw new Error("API URL no configurada");
+  }
+
+  const res = await fetch(`${API}/api/admin/clubs/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`Error al borrar club: HTTP ${res.status} ${txt}`);
+  }
 }
