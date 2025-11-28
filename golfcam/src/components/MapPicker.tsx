@@ -81,12 +81,13 @@ export default function MapPicker({
             Haz click en el mapa para mover el pin. Luego confirma.
           </p>
 
-          <div className="rounded-lg overflow-hidden border min-h-[300px] md:min-h-[400px]">
+            <div className="rounded-lg overflow-hidden border h-[360px] md:h-[420px]">
             {/* Mapa */}
             <MapContainer
-              center={defaultCenter}
-              zoom={10}
-              style={{ width: "100%", height: "100%" }}
+                center={defaultCenter}
+                zoom={10}
+                className="w-full h-full"
+                zoomControl={true}
             >
               <TileLayer
                 attribution='&copy; OpenStreetMap contributors'
