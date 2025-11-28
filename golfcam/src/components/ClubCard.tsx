@@ -4,22 +4,18 @@ import Image from "next/image";
 type Props = { name: string; city: string; image?: string; slug?: string };
 
 export default function ClubCard({ name, city, image }: Props) {
-  // Fallback correcto, el archivo está en public/images/clubs/default.jpg
+  // Asegúrate de que el fallback apunte a donde realmente está el archivo:
   const fallback = "/images/clubs/default.jpg";
 
-  // Normalizamos la ruta:
-  // - si viene vacía -> fallback
-  // - si empieza con http o / -> la dejamos tal cual
-  // - si viene como "images/clubs/..." -> le ponemos "/" delante
   const raw = (image || "").trim();
   const imageSrc =
     raw === ""
       ? fallback
       : raw.startsWith("http")
-      ? raw
-      : raw.startsWith("/")
-      ? raw
-      : `/${raw}`;
+        ? raw
+        : raw.startsWith("/")
+          ? raw
+          : `/${raw}`; // "images/clubs/..." -> "/images/clubs/..."
 
   return (
     <div
@@ -35,10 +31,10 @@ export default function ClubCard({ name, city, image }: Props) {
           src={imageSrc}
           alt={name}
           fill
-          className="object-cover bg-black/20 transition-opacity hover:opacity-90"
-          sizes="(max-width: 768px) 100vw, 33vw"
-          // 👇 clave para quitar el error 400 de /_next/image
+          // 👇 esto es la clave: desactiva el optimizador de Next
           unoptimized
+          className="object-contain bg-black/20 transition-opacity hover:opacity-90"
+          sizes="(max-width: 768px) 100vw, 33vw"
         />
       </div>
       <div className="p-4">
