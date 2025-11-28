@@ -98,8 +98,6 @@ export async function getClubs(
 
 // ---- Admin (management de tablas) ----
 
-// ---- Admin (management de tablas) ----
-
 export type AdminRow = Record<string, unknown>;
 
 export type AdminTableResponse = {
@@ -107,6 +105,10 @@ export type AdminTableResponse = {
   limit: number;
   offset: number;
   items: AdminRow[];
+};
+
+type AdminTablesResponse = {
+  tables?: string[];
 };
 
 /** GET /api/admin/tables -> lista de tablas administrables */
@@ -123,9 +125,9 @@ export async function getAdminTables(): Promise<string[]> {
       console.error("getAdminTables HTTP", res.status);
       return [];
     }
-    const data = await res.json();
+    const data = (await res.json()) as AdminTablesResponse;
     console.log("ADMIN TABLES RAW", data);
-    return (data.tables as string[]) ?? [];
+    return data.tables ?? [];
   } catch (err) {
     console.error("getAdminTables error", err);
     return [];
@@ -155,22 +157,13 @@ export async function getAdminTable(
     throw new Error(`HTTP ${res.status}`);
   }
 
-  const data: any = await res.json();
+  const data = (await res.json()) as AdminTableResponse;
   console.log("ADMIN TABLE RAW DATA", data);
 
-  // Soportar 2 formatos:
-  // 1) { table, limit, offset, items: [...] }
-  // 2) [ { ... }, { ... } ]
-  const items: AdminRow[] = Array.isArray(data.items)
-    ? data.items
-    : Array.isArray(data)
-    ? data
-    : [];
-
   return {
-    table: data.table ?? name,
-    limit: data.limit ?? params.limit ?? items.length,
-    offset: data.offset ?? 0,
-    items,
+    table: data.table,
+    limit: data.limit,
+    offset: data.offset,
+    items: data.items ?? [],
   };
 }
