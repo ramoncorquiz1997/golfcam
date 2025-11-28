@@ -1,7 +1,7 @@
 // src/app/admin/db/[table]/page.tsx
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent, ChangeEvent } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -13,14 +13,13 @@ import {
 import MapPicker from "@/components/MapPicker";
 
 type NewClubForm = {
-  slug: string;
   name: string;
   country: string;
   city: string;
   state: string;
-  image_url: string;
   lat: string;
   lon: string;
+  imageFile: File | null;
 };
 
 export default function AdminTablePage() {
@@ -32,14 +31,13 @@ export default function AdminTablePage() {
   const [error, setError] = useState<string | null>(null);
 
   const [newClub, setNewClub] = useState<NewClubForm>({
-    slug: "",
     name: "",
     country: "",
     city: "",
     state: "",
-    image_url: "",
     lat: "",
     lon: "",
+    imageFile: null,
   });
 
   const [showMap, setShowMap] = useState(false);
@@ -88,9 +86,9 @@ export default function AdminTablePage() {
     e.preventDefault();
     if (!isClubs) return;
 
-    if (!newClub.slug || !newClub.name || !newClub.country) {
+    if (!newClub.name.trim() || !newClub.country.trim()) {
       // eslint-disable-next-line no-alert
-      alert("slug, name y country son obligatorios");
+      alert("Nombre y país son obligatorios");
       return;
     }
 
@@ -101,25 +99,23 @@ export default function AdminTablePage() {
 
     try {
       await adminCreateClub({
-        slug: newClub.slug.trim(),
         name: newClub.name.trim(),
         country: newClub.country.trim(),
         city: newClub.city.trim() || undefined,
         state: newClub.state.trim() || undefined,
-        image_url: newClub.image_url.trim() || undefined,
         lat: latValue === null || Number.isNaN(latValue) ? null : latValue,
         lon: lonValue === null || Number.isNaN(lonValue) ? null : lonValue,
+        imageFile: newClub.imageFile,
       });
 
       setNewClub({
-        slug: "",
         name: "",
         country: "",
         city: "",
         state: "",
-        image_url: "",
         lat: "",
         lon: "",
+        imageFile: null,
       });
       await loadData();
     } catch (err) {
@@ -148,6 +144,11 @@ export default function AdminTablePage() {
   const hasCoords =
     newClub.lat.trim() !== "" && newClub.lon.trim() !== "";
 
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setNewClub((prev) => ({ ...prev, imageFile: file }));
+  };
+
   return (
     <main className="min-h-screen bg-background text-foreground p-6">
       <div className="flex items-center justify-between mb-4">
@@ -168,17 +169,6 @@ export default function AdminTablePage() {
             onSubmit={handleCreate}
             className="grid gap-2 md:grid-cols-2 lg:grid-cols-3"
           >
-            <label className="flex flex-col text-xs gap-1">
-              <span>Slug *</span>
-              <input
-                className="border rounded px-2 py-1 bg-background"
-                value={newClub.slug}
-                onChange={(e) =>
-                  setNewClub((prev) => ({ ...prev, slug: e.target.value }))
-                }
-              />
-            </label>
-
             <label className="flex flex-col text-xs gap-1">
               <span>Nombre *</span>
               <input
@@ -223,18 +213,20 @@ export default function AdminTablePage() {
               />
             </label>
 
-            <label className="flex flex-col text-xs gap-1">
-              <span>Image URL</span>
+            {/* Upload de imagen */}
+            <label className="flex flex-col text-xs gap-1 md:col-span-2 lg:col-span-3">
+              <span>Foto del club (se guardará como slug.jpg)</span>
               <input
-                className="border rounded px-2 py-1 bg-background"
-                value={newClub.image_url}
-                onChange={(e) =>
-                  setNewClub((prev) => ({
-                    ...prev,
-                    image_url: e.target.value,
-                  }))
-                }
+                type="file"
+                accept="image/*"
+                className="text-xs"
+                onChange={handleFileChange}
               />
+              {newClub.imageFile && (
+                <span className="text-[11px] text-muted-foreground">
+                  Archivo: {newClub.imageFile.name}
+                </span>
+              )}
             </label>
 
             {/* Coordenadas con selector de mapa */}
@@ -264,10 +256,6 @@ export default function AdminTablePage() {
                   Elegir en mapa
                 </button>
               </div>
-
-              {/* Inputs ocultos con el valor real para el submit */}
-              <input type="hidden" value={newClub.lat} readOnly />
-              <input type="hidden" value={newClub.lon} readOnly />
             </div>
 
             <div className="flex items-end">
