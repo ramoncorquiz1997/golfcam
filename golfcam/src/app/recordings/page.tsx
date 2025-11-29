@@ -152,7 +152,7 @@ export default function RecordingsPage() {
       if (!country || !state) continue;
       if (!map.has(country)) map.set(country, []);
       const arr = map.get(country)!;
-      if (!arr.includes(state)) arr.insert?.(arr.length, state) ?? arr.push(state);
+      if (!arr.includes(state)) arr.push(state);
     }
     for (const arr of map.values()) arr.sort();
     return map;
@@ -168,7 +168,7 @@ export default function RecordingsPage() {
       const key = `${country}||${state || ""}`;
       if (!map.has(key)) map.set(key, []);
       const arr = map.get(key)!;
-      if (!arr.includes(city)) arr.insert?.(arr.length, city) ?? arr.push(city);
+      if (!arr.includes(city)) arr.push(city);
     }
     for (const arr of map.values()) arr.sort();
     return map;
