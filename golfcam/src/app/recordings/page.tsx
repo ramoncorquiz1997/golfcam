@@ -1,121 +1,37 @@
-// src/app/recordings/page.tsx
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import ClubCard from "@/components/ClubCard";
 import { haversine } from "@/lib/geo";
-import { getClubs, type Club as ApiClub } from "@/lib/api";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  useMap,
-} from "react-leaflet";
-import type { LatLngExpression } from "leaflet";
-import L from "leaflet";
-
-// ---- Tipos ----
+import { getClubs, type Club } from "@/lib/api";
 
 type Court = { slug: string; name: string; image?: string };
 
-// Extendemos el tipo Club que viene de la API por si en el futuro
-// traemos canchas anidadas.
-type ClubWithCourts = ApiClub & {
+// Club que viene de la API + canchas opcionales
+type ClubWithCourts = Club & {
   courts?: Court[];
 };
 
-// Helper para resolver la URL de imagen del club
-function getClubImage(club: ClubWithCourts): string | undefined {
-  const value = club.image_url ?? club.image ?? undefined;
-  if (!value) return undefined;
-  if (value.startsWith("http")) return value;
-  // Normaliza: "images/..." -> "/images/..."
-  return `/${value.replace(/^\/?/, "")}`;
-}
-
-// ---- Componentes auxiliares para el mapa ----
-
-type ClubsMapProps = {
-  clubs: ClubWithCourts[];
-  userLoc: { lat: number; lon: number } | null;
-};
-
-function ChangeView({ center }: { center: LatLngExpression }) {
-  const map = useMap();
-  useEffect(() => {
-    map.setView(center);
-  }, [center, map]);
-  return null;
-}
-
-function ClubsMap({ clubs, userLoc }: ClubsMapProps) {
-  const markers = useMemo(
-    () =>
-      clubs.filter(
-        (c) => typeof c.lat === "number" && typeof c.lon === "number",
-      ),
-    [clubs],
-  );
-
-  const defaultCenter: LatLngExpression = [23.6345, -102.5528]; // centro MX aprox
-
-  const center: LatLngExpression = userLoc
-    ? [userLoc.lat, userLoc.lon]
-    : markers.length > 0
-    ? [markers[0].lat as number, markers[0].lon as number]
-    : defaultCenter;
-
-  return (
-    <div className="mt-4 rounded-lg overflow-hidden border h-[420px]">
-      <MapContainer
-        center={center}
-        zoom={userLoc ? 10 : 5}
-        style={{ width: "100%", height: "100%" }}
-        scrollWheelZoom
-      >
-        <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        <ChangeView center={center} />
-
-        {/* Pin de usuario */}
-        {userLoc && <Marker position={[userLoc.lat, userLoc.lon]} />}
-
-        {/* Pins de clubes */}
-        {markers.map((club) => {
-          const src = getClubImage(club);
-          const icon = src
-            ? L.divIcon({
-                html: `<div class="club-pin-inner"><img src="${src}" alt="${club.name}" /></div>`,
-                className: "club-pin",
-                iconSize: [40, 40],
-                iconAnchor: [20, 40],
-              })
-            : undefined;
-
-          return (
-            <Marker
-              key={club.slug}
-              position={[club.lat as number, club.lon as number]}
-              icon={icon}
-            />
-          );
-        })}
-      </MapContainer>
+// Componente de mapa cargado solo en cliente
+const ClubsMap = dynamic<
+  { clubs: ClubWithCourts[]; userLocation: { lat: number; lon: number } | null }
+>(() => import("./ClubsMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-64 text-sm text-muted-foreground">
+      Cargando mapa…
     </div>
-  );
-}
-
-// ---- Página principal ----
+  ),
+});
 
 export default function RecordingsPage() {
   const [clubs, setClubs] = useState<ClubWithCourts[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Lista / Mapa
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
   // Cargar clubes desde la API (DB)
@@ -248,13 +164,6 @@ export default function RecordingsPage() {
     );
   };
 
-  // Cuando cambias a modo mapa y no hay loc todavía, pide ubicación
-  useEffect(() => {
-    if (viewMode === "map" && !loc && geoStatus === "idle") {
-      requestLocation();
-    }
-  }, [viewMode, loc, geoStatus]);
-
   const nearby = useMemo(() => {
     if (!loc) return [];
     return clubs
@@ -277,7 +186,7 @@ export default function RecordingsPage() {
           <h1 className="text-3xl font-bold">Grabaciones</h1>
           <p className="text-sm text-muted-foreground">
             Selecciona un club o filtra por ubicación. También puedes ver clubes
-            cerca de ti o explorar el mapa.
+            cerca de ti.
           </p>
         </div>
 
@@ -291,7 +200,7 @@ export default function RecordingsPage() {
           </p>
         )}
 
-        {/* Controles de filtro + toggle vista */}
+        {/* Controles de filtro */}
         {!loading && !error && clubs.length > 0 && (
           <>
             <div className="grid gap-3 md:grid-cols-5">
@@ -359,7 +268,7 @@ export default function RecordingsPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
               <div className="text-sm text-muted-foreground">
                 Mostrando{" "}
                 <span className="font-medium text-foreground">
@@ -371,33 +280,7 @@ export default function RecordingsPage() {
                 </span>{" "}
                 clubes
               </div>
-              <div className="flex items-center gap-2">
-                {/* Toggle lista / mapa */}
-                <div className="inline-flex rounded-lg border border-border bg-card overflow-hidden text-xs">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("list")}
-                    className={`px-3 py-1.5 ${
-                      viewMode === "list"
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-accent"
-                    }`}
-                  >
-                    Lista
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("map")}
-                    className={`px-3 py-1.5 ${
-                      viewMode === "map"
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-accent"
-                    }`}
-                  >
-                    Mapa
-                  </button>
-                </div>
-
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={reset}
                   className="px-3 py-1.5 rounded-lg border border-border bg-card hover:ring-1 hover:ring-primary/40 text-sm"
@@ -412,52 +295,71 @@ export default function RecordingsPage() {
                     ? "Actualizar ubicación"
                     : "Usar mi ubicación"}
                 </button>
+
+                {/* Toggle Lista / Mapa */}
+                <div className="flex rounded-lg border border-border overflow-hidden text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("list")}
+                    className={`px-3 py-1.5 ${
+                      viewMode === "list"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-muted-foreground"
+                    }`}
+                  >
+                    Lista
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("map")}
+                    className={`px-3 py-1.5 ${
+                      viewMode === "map"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-muted-foreground"
+                    }`}
+                  >
+                    Mapa
+                  </button>
+                </div>
               </div>
             </div>
           </>
         )}
 
-        {/* Vista LISTA */}
-        {viewMode === "list" && !loading && !error && clubs.length > 0 && (
-          <>
-            {/* Cerca de ti */}
-            {loc && (
-              <section className="space-y-3">
-                <h2 className="text-lg font-semibold">Cerca de ti</h2>
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {nearby.map(({ club, km }) => (
-                    <Link
-                      key={club.slug}
-                      href={`/recordings/${club.slug}`}
-                      prefetch
-                    >
-                      <div className="space-y-2">
-                        <ClubCard
-                          name={club.name}
-                          city={[club.city, club.state]
-                            .filter(Boolean)
-                            .join(", ")}
-                          image={getClubImage(club)}
-                        />
-                        <div className="text-xs text-muted-foreground">
-                          A ~{km.toFixed(1)} km • {club.city}
-                          {club.state ? `, ${club.state}` : ""} —{" "}
-                          {club.country}
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                  {nearby.length === 0 && (
-                    <div className="text-sm text-muted-foreground">
-                      No encontramos clubes con coordenadas cerca de tu
-                      ubicación.
+        {/* Cerca de ti (solo en modo lista) */}
+        {loc && !loading && !error && viewMode === "list" && (
+          <section className="space-y-3">
+            <h2 className="text-lg font-semibold">Cerca de ti</h2>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {nearby.map(({ club, km }) => (
+                <Link key={club.slug} href={`/recordings/${club.slug}`} prefetch>
+                  <div className="space-y-2">
+                    <ClubCard
+                      name={club.name}
+                      city={[club.city, club.state].filter(Boolean).join(", ")}
+                      image={(club.image_url ?? club.image) || undefined}
+                    />
+                    <div className="text-xs text-muted-foreground">
+                      A ~{km.toFixed(1)} km • {club.city}
+                      {club.state ? `, ${club.state}` : ""} — {club.country}
                     </div>
-                  )}
+                  </div>
+                </Link>
+              ))}
+              {nearby.length === 0 && (
+                <div className="text-sm text-muted-foreground">
+                  No encontramos clubes con coordenadas cerca de tu ubicación.
                 </div>
-              </section>
-            )}
+              )}
+            </div>
+          </section>
+        )}
 
-            {/* Todos los clubes */}
+        {/* Todos los clubes: lista */}
+        {!loading &&
+          !error &&
+          clubs.length > 0 &&
+          viewMode === "list" && (
             <section className="space-y-3">
               <h2 className="text-lg font-semibold">Todos los clubes</h2>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -468,7 +370,7 @@ export default function RecordingsPage() {
                       city={[club.city, club.state]
                         .filter(Boolean)
                         .join(", ")}
-                      image={getClubImage(club)}
+                      image={(club.image_url ?? club.image) || undefined}
                     />
                   </Link>
                 ))}
@@ -479,22 +381,22 @@ export default function RecordingsPage() {
                 )}
               </div>
             </section>
-          </>
-        )}
+          )}
 
-        {/* Vista MAPA */}
-        {viewMode === "map" && !loading && !error && clubs.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="text-lg font-semibold">Mapa de clubes</h2>
-            <ClubsMap clubs={filtered} userLoc={loc} />
-            {!loc && (
+        {/* Vista mapa */}
+        {!loading &&
+          !error &&
+          clubs.length > 0 &&
+          viewMode === "map" && (
+            <section className="space-y-3">
+              <h2 className="text-lg font-semibold">Mapa de clubes</h2>
               <p className="text-xs text-muted-foreground">
-                Usa el botón &quot;Usar mi ubicación&quot; para centrar el
-                mapa en tu posición.
+                Los pines muestran la ubicación de cada club. Usa los filtros de
+                arriba para reducir el listado y el mapa.
               </p>
-            )}
-          </section>
-        )}
+              <ClubsMap clubs={filtered} userLocation={loc} />
+            </section>
+          )}
       </section>
     </main>
   );
