@@ -294,10 +294,8 @@ export default function RecordingsPage() {
                   <div className="space-y-2">
                     <ClubCard
                       name={club.name}
-                      city={[club.city, club.state]
-                        .filter(Boolean)
-                        .join(", ")}
-                      image={club.image_url || club.image}
+                      city={[club.city, club.state].filter(Boolean).join(", ")}
+                      image={(club.image_url ?? club.image) || undefined}
                     />
                     <div className="text-xs text-muted-foreground">
                       A ~{km.toFixed(1)} km • {club.city}
@@ -325,7 +323,7 @@ export default function RecordingsPage() {
                   <ClubCard
                     name={club.name}
                     city={[club.city, club.state].filter(Boolean).join(", ")}
-                    image={club.image_url || club.image}
+                    image={(club.image_url ?? club.image) || undefined}
                   />
                 </Link>
               ))}
