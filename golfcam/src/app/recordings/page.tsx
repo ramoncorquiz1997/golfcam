@@ -17,7 +17,7 @@ type ClubWithCourts = Club & {
 // Componente de mapa cargado solo en cliente
 const ClubsMap = dynamic<
   { clubs: ClubWithCourts[]; userLocation: { lat: number; lon: number } | null }
->(() => import("./ClubsMap"), {
+>(() => import("@/components/ClubsMap"), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-64 text-sm text-muted-foreground">
