@@ -98,11 +98,19 @@ export default function ClubsMap({ clubs, userLocation }: Props) {
           return (
             <Marker key={club.slug} position={position} icon={icon}>
               <Popup>
-                <div className="space-y-1">
-                  <div className="font-semibold text-sm">{club.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {subtitleParts}
+                <div className="space-y-2">
+                  <div>
+                    <div className="font-semibold text-sm">{club.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {subtitleParts}
+                    </div>
                   </div>
+                  <a
+                    href={`/recordings/${club.slug}`}
+                    className="inline-flex px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:opacity-90"
+                  >
+                    Ver grabaciones
+                  </a>
                 </div>
               </Popup>
             </Marker>
