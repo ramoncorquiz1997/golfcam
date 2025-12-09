@@ -23,7 +23,7 @@ export type ApiList<T> = {
 
 // URL base del backend (sin slash final)
 // Ej: NEXT_PUBLIC_API_URL=https://clipsazo.com
-const API = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+const API = "https://clipsazo.com";
 
 // ---- Helpers genéricos ----
 
