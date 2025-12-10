@@ -5,12 +5,6 @@ import fs from "node:fs/promises";
 
 export const dynamic = "force-dynamic";
 
-type RouteParams = {
-  slug: string;
-  date: string;
-  court: string;
-};
-
 type Clip = {
   url: string;
   ts: string;
@@ -32,13 +26,13 @@ function hhmmssToHuman(s: string): string {
 
 export async function GET(
   _req: NextRequest,
-  context: { params: RouteParams }
+  { params }: { params: { slug: string; date: string; court: string } }
 ) {
-  const { slug, date, court } = context.params;
+  const { slug, date, court } = params;
 
+  // Nueva estructura: <base>/<slug>/<YYYY-MM-DD>/<court>/
   const absDir = path.join(RECORDINGS_BASE, slug, date, court);
 
-  // Logs para debug (no rompen el build)
   console.log("[recordings] absDir =", absDir);
 
   let entries: string[];
@@ -51,18 +45,18 @@ export async function GET(
 
   const clips: Clip[] = [];
 
-  for (const file of entries) {
-    const match = file.match(FILE_RE);
-    if (!match) continue;
+  for (const name of entries) {
+    const m = name.match(FILE_RE);
+    if (!m) continue;
 
-    const tsCode = match[1]; // HHMMSS
+    const tsCode = m[1]; // HHMMSS
     const ts = hhmmssToHuman(tsCode);
 
     clips.push({
-      url: `${PUBLIC_RECORDINGS_PREFIX}/${slug}/${date}/${court}/${file}`,
+      url: `${PUBLIC_RECORDINGS_PREFIX}/${slug}/${date}/${court}/${name}`,
       ts,
       label: ts,
-      name: file,
+      name,
     });
   }
 
