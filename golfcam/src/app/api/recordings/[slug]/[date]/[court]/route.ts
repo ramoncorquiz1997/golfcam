@@ -19,13 +19,12 @@ const FILE_RE = /^(\d{6})\.mp4$/i;
 const hhmmssToHuman = (s: string) =>
   `${s.slice(0, 2)}:${s.slice(2, 4)}:${s.slice(4, 6)}`;
 
-// OJO: sin tipo en el segundo argumento (ctx: any)
-export async function GET(_req: Request, ctx: any) {
-  const { slug, date, court } = ctx.params as {
-    slug: string;
-    date: string;
-    court: string;
-  };
+// 👇 ESTA es la firma correcta para Next 15, sin any
+export async function GET(
+  _req: Request,
+  { params }: { params: { slug: string; date: string; court: string } },
+) {
+  const { slug, date, court } = params;
 
   // Estructura: <base>/<slug>/<YYYY-MM-DD>/<court>/
   const absDir = path.join(RECORDINGS_BASE, slug, date, court);
