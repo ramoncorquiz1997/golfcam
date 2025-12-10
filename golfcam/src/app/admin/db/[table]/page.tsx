@@ -4,13 +4,21 @@
 import { useEffect, useState, FormEvent, ChangeEvent } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import {
   getAdminTable,
   type AdminRow,
   adminCreateClub,
   adminDeleteClub,
 } from "@/lib/api";
-import MapPicker from "@/components/MapPicker";
+
+// ⛔ QUITAMOS el import directo:
+// import MapPicker from "@/components/MapPicker";
+
+// ✅ Dynamic import solo en cliente:
+const MapPicker = dynamic(() => import("@/components/MapPicker"), {
+  ssr: false,
+});
 
 type NewClubForm = {
   name: string;
@@ -186,7 +194,10 @@ export default function AdminTablePage() {
                 className="border rounded px-2 py-1 bg-background"
                 value={newClub.country}
                 onChange={(e) =>
-                  setNewClub((prev) => ({ ...prev, country: e.target.value }))
+                  setNewClub((prev) => ({
+                    ...prev,
+                    country: e.target.value,
+                  }))
                 }
               />
             </label>
@@ -339,10 +350,14 @@ export default function AdminTablePage() {
       {showMap && (
         <MapPicker
           initialLat={
-            newClub.lat.trim() !== "" ? Number.parseFloat(newClub.lat) : undefined
+            newClub.lat.trim() !== ""
+              ? Number.parseFloat(newClub.lat)
+              : undefined
           }
           initialLon={
-            newClub.lon.trim() !== "" ? Number.parseFloat(newClub.lon) : undefined
+            newClub.lon.trim() !== ""
+              ? Number.parseFloat(newClub.lon)
+              : undefined
           }
           onCancel={handleCancelMap}
           onSelect={handleSelectLocation}
