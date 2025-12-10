@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "node:path";
 import fs from "node:fs/promises";
 
+export const dynamic = "force-dynamic";
+
 type RouteParams = {
   slug: string;
   date: string;
@@ -11,9 +13,9 @@ type RouteParams = {
 
 type Clip = {
   url: string;
-  ts: string;    // "HH:MM:SS"
-  label: string; // "HH:MM:SS"
-  name: string;  // "HHMMSS.mp4"
+  ts: string;
+  label: string;
+  name: string;
 };
 
 const RECORDINGS_BASE =
@@ -22,47 +24,48 @@ const RECORDINGS_BASE =
 const PUBLIC_RECORDINGS_PREFIX =
   process.env.PUBLIC_RECORDINGS_PREFIX ?? "/recordings";
 
-const FILE_RE = /^(\d{6})\.mp4$/i;
+const FILE_RE = /^(\d{6})\.mp4$/;
 
 function hhmmssToHuman(s: string): string {
   return `${s.slice(0, 2)}:${s.slice(2, 4)}:${s.slice(4, 6)}`;
 }
 
-// OJO: dejamos el segundo argumento como `any`
-// para que Next no marque el tipo como inválido.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function GET(_req: NextRequest, context: any) {
-  const { slug, date, court } = context.params as RouteParams;
+export async function GET(
+  _req: NextRequest,
+  context: { params: RouteParams }
+) {
+  const { slug, date, court } = context.params;
 
-  // Estructura: <base>/<slug>/<YYYY-MM-DD>/<court>/
   const absDir = path.join(RECORDINGS_BASE, slug, date, court);
+
+  // Logs para debug (no rompen el build)
+  console.log("[recordings] absDir =", absDir);
 
   let entries: string[];
   try {
     entries = await fs.readdir(absDir);
-  } catch {
-    // Si no existe la carpeta, regresamos vacío
+  } catch (err) {
+    console.error("[recordings] readdir error:", err);
     return NextResponse.json<Clip[]>([]);
   }
 
   const clips: Clip[] = [];
 
-  for (const name of entries) {
-    const m = name.match(FILE_RE);
-    if (!m) continue;
+  for (const file of entries) {
+    const match = file.match(FILE_RE);
+    if (!match) continue;
 
-    const tsCode = m[1]; // "HHMMSS"
+    const tsCode = match[1]; // HHMMSS
     const ts = hhmmssToHuman(tsCode);
 
     clips.push({
-      url: `${PUBLIC_RECORDINGS_PREFIX}/${slug}/${date}/${court}/${name}`,
+      url: `${PUBLIC_RECORDINGS_PREFIX}/${slug}/${date}/${court}/${file}`,
       ts,
       label: ts,
-      name,
+      name: file,
     });
   }
 
-  // Orden cronológico por nombre de archivo (HHMMSS.mp4)
   clips.sort((a, b) => a.name.localeCompare(b.name));
 
   return NextResponse.json(clips);
