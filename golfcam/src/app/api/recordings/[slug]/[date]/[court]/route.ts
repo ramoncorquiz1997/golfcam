@@ -1,8 +1,14 @@
+// src/app/api/recordings/[slug]/[date]/[court]/route.ts
+import { NextResponse } from "next/server";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic";
+type Clip = {
+  url: string;
+  ts: string;    // "HH:MM:SS"
+  label: string; // "HH:MM:SS"
+  name: string;  // "HHMMSS.mp4"
+};
 
 const RECORDINGS_BASE =
   process.env.RECORDINGS_BASE ?? "/opt/clipsazo/golfcam/recordings";
@@ -10,36 +16,45 @@ const RECORDINGS_BASE =
 const PUBLIC_RECORDINGS_PREFIX =
   process.env.PUBLIC_RECORDINGS_PREFIX ?? "/recordings";
 
-const FILE_RE = /^(\d{6})\.mp4$/;
+const FILE_RE = /^(\d{6})\.mp4$/i;
 
-function hhmmssToHuman(s) {
+function hhmmssToHuman(s: string): string {
   return `${s.slice(0, 2)}:${s.slice(2, 4)}:${s.slice(4, 6)}`;
 }
 
-export async function GET(_req, { params }) {
-  const { slug, date, court } = params;
+export async function GET(request: Request) {
+  // URL: /api/recordings/[slug]/[date]/[court]
+  const { pathname } = new URL(request.url);
+  const segments = pathname.split("/");
+  // ["", "api", "recordings", slug, date, court]
+  const slug = segments[3];
+  const date = segments[4];
+  const court = segments[5];
 
-  // Estructura: <base>/<slug>/<YYYY-MM-DD>/<court>/
-  const absDir = path.join(RECORDINGS_BASE, slug, date, court);
-
-  console.log("[recordings] absDir =", absDir);
-
-  let entries;
-  try {
-    entries = await fs.readdir(absDir);
-  } catch (err) {
-    console.error("[recordings] readdir error:", err);
+  if (!slug || !date || !court) {
+    // Params mal formados → regresamos vacío
     return NextResponse.json([]);
   }
 
-  const clips = [];
+  // Estructura en disco: <base>/<slug>/<YYYY-MM-DD>/<court>/
+  const absDir = path.join(RECORDINGS_BASE, slug, date, court);
+
+  let entries: string[];
+  try {
+    entries = await fs.readdir(absDir);
+  } catch {
+    // Si no existe el directorio, regresamos lista vacía
+    return NextResponse.json([]);
+  }
+
+  const clips: Clip[] = [];
 
   for (const name of entries) {
-    const m = name.match(FILE_RE);
-    if (!m) continue;
+    const match = name.match(FILE_RE);
+    if (!match) continue;
 
-    const tsCode = m[1]; // HHMMSS
-    const ts = hhmmssToHuman(tsCode);
+    const tsRaw = match[1]; // "HHMMSS"
+    const ts = hhmmssToHuman(tsRaw);
 
     clips.push({
       url: `${PUBLIC_RECORDINGS_PREFIX}/${slug}/${date}/${court}/${name}`,
@@ -49,6 +64,7 @@ export async function GET(_req, { params }) {
     });
   }
 
+  // Ordenar por nombre de archivo (HHMMSS.mp4) → cronológico
   clips.sort((a, b) => a.name.localeCompare(b.name));
 
   return NextResponse.json(clips);
