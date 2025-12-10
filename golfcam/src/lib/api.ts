@@ -24,6 +24,7 @@ export type ApiList<T> = {
 // URL base del backend (sin slash final)
 // Ej: NEXT_PUBLIC_API_URL=https://clipsazo.com
 const API = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+
 // ---- Helpers genéricos ----
 
 /** Fetch helper con ISR básico */
@@ -111,12 +112,9 @@ type AdminTablesResponse = {
 
 /** GET /api/admin/tables -> lista de tablas administrables */
 export async function getAdminTables(): Promise<string[]> {
-  if (!API) {
-    console.warn("getAdminTables: API no configurada (NEXT_PUBLIC_API_URL)");
-    return [];
-  }
   try {
-    const res = await fetch(`${API}/api/admin/tables`, {
+    // SIEMPRE mismo origen → sin CORS
+    const res = await fetch("/api/admin/tables", {
       cache: "no-store",
     });
     if (!res.ok) {
@@ -137,16 +135,8 @@ export async function getAdminTable(
   name: string,
   params: { limit?: number; offset?: number } = {},
 ): Promise<AdminTableResponse> {
-  if (!API) {
-    throw new Error(
-      "API URL not configured (NEXT_PUBLIC_API_URL no está seteada)",
-    );
-  }
-
   const qs = toQuery(params);
-  const url = `${API}/api/admin/table/${encodeURIComponent(
-    name,
-  )}?${qs.toString()}`;
+  const url = `/api/admin/table/${encodeURIComponent(name)}?${qs.toString()}`;
 
   console.log("getAdminTable URL", url);
 
@@ -168,7 +158,6 @@ export async function getAdminTable(
 
 // ---- Admin: CRUD específico de clubs ----
 
-// Payload para crear club desde el admin
 export type AdminCreateClubPayload = {
   // slug lo genera el backend según nombre + ciudad
   name: string;
@@ -184,12 +173,6 @@ export type AdminCreateClubPayload = {
 export async function adminCreateClub(
   payload: AdminCreateClubPayload,
 ): Promise<Club> {
-  if (!API) {
-    throw new Error(
-      "API URL not configured (NEXT_PUBLIC_API_URL no está seteada)",
-    );
-  }
-
   const form = new FormData();
   form.set("name", payload.name);
   form.set("country", payload.country);
@@ -206,7 +189,7 @@ export async function adminCreateClub(
     form.set("image", payload.imageFile);
   }
 
-  const res = await fetch(`${API}/api/admin/clubs`, {
+  const res = await fetch("/api/admin/clubs", {
     method: "POST",
     body: form,
   });
@@ -220,13 +203,7 @@ export async function adminCreateClub(
 
 /** DELETE /api/admin/clubs/:id -> borra un club */
 export async function adminDeleteClub(id: number): Promise<void> {
-  if (!API) {
-    throw new Error(
-      "API URL not configured (NEXT_PUBLIC_API_URL no está seteada)",
-    );
-  }
-
-  const res = await fetch(`${API}/api/admin/clubs/${id}`, {
+  const res = await fetch(`/api/admin/clubs/${id}`, {
     method: "DELETE",
   });
 
