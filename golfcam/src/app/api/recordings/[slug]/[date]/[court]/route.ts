@@ -21,11 +21,11 @@ const hhmmssToHuman = (s: string) =>
 
 export async function GET(
   _req: Request,
-  ctx: { params: Promise<{ slug: string; date: string; court: string }> }
+  { params }: { params: { slug: string; date: string; court: string } }
 ) {
-  const { slug, date, court } = await ctx.params;
+  const { slug, date, court } = params;
 
-  // Nueva estructura: <base>/<slug>/<YYYY-MM-DD>/<court>/
+  // <base>/<slug>/<YYYY-MM-DD>/<court>/
   const absDir = path.join(RECORDINGS_BASE, slug, date, court);
 
   let entries: string[] = [];
