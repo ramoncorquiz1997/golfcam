@@ -25,6 +25,23 @@ export type ApiList<T> = {
 // Ej: NEXT_PUBLIC_API_URL=https://clipsazo.com
 const API = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
 
+function apiUrl(path: string): string {
+  // Si ya es URL absoluta, la regresamos tal cual
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+
+  // Asegurarnos de que empiece con /
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+
+  // Si NO hay API configurada (por ejemplo en dev), usar relative
+  if (!API) {
+    return cleanPath;
+  }
+
+  // En prod: NEXT_PUBLIC_API_URL + path
+  return `${API}${cleanPath}`;
+}
 // ---- Helpers genéricos ----
 
 /** Fetch helper con ISR básico */
@@ -111,16 +128,18 @@ type AdminTablesResponse = {
 };
 
 /** GET /api/admin/tables -> lista de tablas administrables */
+/** GET /api/admin/tables -> lista de tablas administrables */
 export async function getAdminTables(): Promise<string[]> {
+  const url = apiUrl("/api/admin/tables");
+
   try {
-    // SIEMPRE mismo origen → sin CORS
-    const res = await fetch("/api/admin/tables", {
-      cache: "no-store",
-    });
+    const res = await fetch(url, { cache: "no-store" });
+
     if (!res.ok) {
-      console.error("getAdminTables HTTP", res.status);
+      console.error("getAdminTables HTTP", res.status, await res.text());
       return [];
     }
+
     const data = (await res.json()) as AdminTablesResponse;
     console.log("ADMIN TABLES RAW", data);
     return data.tables ?? [];
@@ -136,7 +155,8 @@ export async function getAdminTable(
   params: { limit?: number; offset?: number } = {},
 ): Promise<AdminTableResponse> {
   const qs = toQuery(params);
-  const url = `/api/admin/table/${encodeURIComponent(name)}?${qs.toString()}`;
+  const path = `/api/admin/table/${encodeURIComponent(name)}?${qs.toString()}`;
+  const url = apiUrl(path);
 
   console.log("getAdminTable URL", url);
 
