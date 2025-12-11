@@ -4,8 +4,11 @@ import os
 import psycopg
 
 # ========= CONFIG =========
-DB_URL = os.getenv("DATABASE_URL", "postgresql://clipsazo:Clipsazo@127.0.0.1:5432/clipsazo")
-JSON_PATH = "/opt/clipsazo/golfcam/src/data/clubs.json"
+DB_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://clipsazo_user:Clipsazo@127.0.0.1:5432/clipsazo_db",
+)
+JSON_PATH = "/opt/clipsazo/clipsazo/golfcam/src/data/clubs.json"
 
 print(f"[INFO] Conectando a BD: {DB_URL}")
 print(f"[INFO] Leyendo JSON desde: {JSON_PATH}")
