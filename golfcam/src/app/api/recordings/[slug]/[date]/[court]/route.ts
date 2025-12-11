@@ -11,7 +11,7 @@ type Clip = {
 };
 
 const RECORDINGS_BASE =
-  process.env.RECORDINGS_BASE ?? "/opt/clipsazo/golfcam/recordings";
+  process.env.RECORDINGS_BASE ?? "/opt/clipsazo/clipsazo/golfcam/recordings";
 
 const PUBLIC_RECORDINGS_PREFIX =
   process.env.PUBLIC_RECORDINGS_PREFIX ?? "/recordings";
