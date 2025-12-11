@@ -8,8 +8,8 @@ class Config:
     # DB
     PGHOST = os.getenv("PGHOST", "localhost")
     PGPORT = int(os.getenv("PGPORT", 5432))
-    PGDATABASE = os.getenv("PGDATABASE", "clipsazo")
-    PGUSER = os.getenv("PGUSER", "clipsazo")
+    PGDATABASE = os.getenv("PGDATABASE", "clipsazo_db")
+    PGUSER = os.getenv("PGUSER", "clipsazo_user")
     PGPASSWORD = os.getenv("PGPASSWORD", "")
     # CORS
     CORS_ORIGINS = [s.strip() for s in os.getenv("CORS_ORIGINS", "*").split(",") if s.strip()]
