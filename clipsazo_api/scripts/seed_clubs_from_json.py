@@ -8,7 +8,7 @@ DB_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://clipsazo_user:Clipsazo@127.0.0.1:5432/clipsazo_db",
 )
-JSON_PATH = "/opt/clipsazo/clipsazo/golfcam/src/data/clubs.json"
+JSON_PATH = "/opt/clipsazo/golfcam/src/data/clubs.json"
 
 print(f"[INFO] Conectando a BD: {DB_URL}")
 print(f"[INFO] Leyendo JSON desde: {JSON_PATH}")

@@ -15,7 +15,7 @@ bp = Blueprint("admin", __name__, url_prefix="/api/admin")
 # Por defecto: /opt/clipsazo/golfcam/public/images/clubs
 CLUB_IMAGE_DIR = os.environ.get(
     "CLUB_IMAGES_DIR",
-    "/opt/clipsazo/clipsazo/golfcam/public/images/clubs",
+    "/opt/clipsazo/golfcam/public/images/clubs",
 )
 
 # -------------------------------------------------------------------
