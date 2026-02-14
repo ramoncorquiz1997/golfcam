@@ -14,7 +14,8 @@ type Opts = { stepMin: number; startHour: number; endHour: number };
 
 // Extrae HHMMSS de un string (p. ej. de la URL)
 function extractHHMMSS(str: string): string | null {
-  const m = str.match(/(\d{6})(?:\.mp4)?$/);
+  // Busca 6 números seguidos en cualquier parte del nombre del archivo
+  const m = str.match(/(\d{6})/);
   return m ? m[1] : null;
 }
 
