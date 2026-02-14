@@ -1,33 +1,63 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import ClubCard from "@/components/ClubCard";
-import clubsData from "@/data/clubs.json";
 import { haversine } from "@/lib/geo";
+import { getClubs, type Club } from "@/lib/api";
 
 type Court = { slug: string; name: string; image?: string };
-type Club = {
-  slug: string;
-  name: string;
-  city: string;
-  state?: string;
-  country: string;
-  lat?: number;
-  lon?: number;
-  image?: string;
+
+// Club que viene de la API + canchas opcionales
+type ClubWithCourts = Club & {
   courts?: Court[];
 };
 
+// Componente de mapa cargado solo en cliente
+const ClubsMap = dynamic<
+  { clubs: ClubWithCourts[]; userLocation: { lat: number; lon: number } | null }
+>(() => import("@/components/ClubsMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-64 text-sm text-muted-foreground">
+      Cargando mapa…
+    </div>
+  ),
+});
+
 export default function RecordingsPage() {
-  const clubs = clubsData as Club[];
+  const [clubs, setClubs] = useState<ClubWithCourts[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Lista / Mapa
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
+
+  // Cargar clubes desde la API (DB)
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getClubs({ limit: 200 });
+        setClubs(data.items as ClubWithCourts[]);
+      } catch (err) {
+        setError(String(err));
+        setClubs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
 
   const countries = useMemo(
     () =>
       Array.from(new Set(clubs.map((c) => (c.country || "").trim())))
         .filter(Boolean)
         .sort(),
-    [clubs]
+    [clubs],
   );
 
   const statesByCountry = useMemo(() => {
@@ -130,7 +160,7 @@ export default function RecordingsPage() {
         setGeoStatus("ok");
       },
       () => setGeoStatus("denied"),
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 }
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 300000 },
     );
   };
 
@@ -140,7 +170,10 @@ export default function RecordingsPage() {
       .filter((c) => typeof c.lat === "number" && typeof c.lon === "number")
       .map((c) => ({
         club: c,
-        km: haversine(loc, { lat: c.lat!, lon: c.lon! }),
+        km: haversine(
+          { lat: loc.lat, lon: loc.lon },
+          { lat: c.lat as number, lon: c.lon as number },
+        ),
       }))
       .sort((a, b) => a.km - b.km)
       .slice(0, 6);
@@ -157,102 +190,155 @@ export default function RecordingsPage() {
           </p>
         </div>
 
+        {/* Estado de carga / error */}
+        {loading && (
+          <p className="text-sm text-muted-foreground">Cargando clubes…</p>
+        )}
+        {error && (
+          <p className="text-sm text-red-500">
+            Error cargando clubes: {error}
+          </p>
+        )}
+
         {/* Controles de filtro */}
-        <div className="grid gap-3 md:grid-cols-5">
-          <div className="md:col-span-2">
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar por club, ciudad, estado, país, o cancha…"
-              className="w-full px-3 py-2 rounded-lg bg-background text-foreground border border-input placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background"
-            />
-          </div>
+        {!loading && !error && clubs.length > 0 && (
+          <>
+            <div className="grid gap-3 md:grid-cols-5">
+              <div className="md:col-span-2">
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Buscar por club, ciudad, estado, país, o cancha…"
+                  className="w-full px-3 py-2 rounded-lg bg-background text-foreground border border-input placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background"
+                />
+              </div>
 
-          <div>
-            <select
-              value={country}
-              onChange={(e) => {
-                setCountry(e.target.value);
-                setState("");
-                setCity("");
-              }}
-              className="w-full px-3 py-2 rounded-lg bg-background text-foreground border border-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background"
-            >
-              <option value="">Todos los países</option>
-              {countries.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
+              <div>
+                <select
+                  value={country}
+                  onChange={(e) => {
+                    setCountry(e.target.value);
+                    setState("");
+                    setCity("");
+                  }}
+                  className="w-full px-3 py-2 rounded-lg bg-background text-foreground border border-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background"
+                >
+                  <option value="">Todos los países</option>
+                  {countries.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <div>
-            <select
-              value={state}
-              onChange={(e) => {
-                setState(e.target.value);
-                setCity("");
-              }}
-              className="w-full px-3 py-2 rounded-lg bg-background text-foreground border border-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background"
-              disabled={!country && stateOptions.length === 0}
-            >
-              <option value="">Todos los estados</option>
-              {stateOptions.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
+              <div>
+                <select
+                  value={state}
+                  onChange={(e) => {
+                    setState(e.target.value);
+                    setCity("");
+                  }}
+                  className="w-full px-3 py-2 rounded-lg bg-background text-foreground border border-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background"
+                  disabled={!country && stateOptions.length === 0}
+                >
+                  <option value="">Todos los estados</option>
+                  {stateOptions.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <div>
-            <select
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-background text-foreground border border-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background"
-              disabled={cityOptions.length === 0}
-            >
-              <option value="">Todas las ciudades</option>
-              {cityOptions.map((ct) => (
-                <option key={ct} value={ct}>
-                  {ct}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+              <div>
+                <select
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-background text-foreground border border-input focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background"
+                  disabled={cityOptions.length === 0}
+                >
+                  <option value="">Todas las ciudades</option>
+                  {cityOptions.map((ct) => (
+                    <option key={ct} value={ct}>
+                      {ct}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Mostrando{" "}
-            <span className="font-medium text-foreground">{filtered.length}</span> de{" "}
-            <span className="font-medium text-foreground">{clubs.length}</span> clubes
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={reset}
-              className="px-3 py-1.5 rounded-lg border border-border bg-card hover:ring-1 hover:ring-primary/40 text-sm"
-            >
-              Limpiar filtros
-            </button>
-            <button
-              onClick={requestLocation}
-              className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 text-sm"
-            >
-              {geoStatus === "ok" ? "Actualizar ubicación" : "Usar mi ubicación"}
-            </button>
-          </div>
-        </div>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div className="text-sm text-muted-foreground">
+                Mostrando{" "}
+                <span className="font-medium text-foreground">
+                  {filtered.length}
+                </span>{" "}
+                de{" "}
+                <span className="font-medium text-foreground">
+                  {clubs.length}
+                </span>{" "}
+                clubes
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={reset}
+                  className="px-3 py-1.5 rounded-lg border border-border bg-card hover:ring-1 hover:ring-primary/40 text-sm"
+                >
+                  Limpiar filtros
+                </button>
+                <button
+                  onClick={requestLocation}
+                  className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 text-sm"
+                >
+                  {geoStatus === "ok"
+                    ? "Actualizar ubicación"
+                    : "Usar mi ubicación"}
+                </button>
 
-        {loc && (
+                {/* Toggle Lista / Mapa */}
+                <div className="flex rounded-lg border border-border overflow-hidden text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("list")}
+                    className={`px-3 py-1.5 ${
+                      viewMode === "list"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-muted-foreground"
+                    }`}
+                  >
+                    Lista
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("map")}
+                    className={`px-3 py-1.5 ${
+                      viewMode === "map"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-muted-foreground"
+                    }`}
+                  >
+                    Mapa
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Cerca de ti (solo en modo lista) */}
+        {loc && !loading && !error && viewMode === "list" && (
           <section className="space-y-3">
             <h2 className="text-lg font-semibold">Cerca de ti</h2>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {nearby.map(({ club, km }) => (
                 <Link key={club.slug} href={`/recordings/${club.slug}`} prefetch>
                   <div className="space-y-2">
-                    <ClubCard {...club} />
+                    <ClubCard
+                      name={club.name}
+                      city={[club.city, club.state].filter(Boolean).join(", ")}
+                      image={(club.image_url ?? club.image) || undefined}
+                    />
                     <div className="text-xs text-muted-foreground">
                       A ~{km.toFixed(1)} km • {club.city}
                       {club.state ? `, ${club.state}` : ""} — {club.country}
@@ -269,21 +355,48 @@ export default function RecordingsPage() {
           </section>
         )}
 
-        <section className="space-y-3">
-          <h2 className="text-lg font-semibold">Todos los clubes</h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((club) => (
-              <Link key={club.slug} href={`/recordings/${club.slug}`}>
-                <ClubCard {...club} />
-              </Link>
-            ))}
-            {filtered.length === 0 && (
-              <div className="md:col-span-4 text-sm text-muted-foreground">
-                No se encontraron clubes con esos filtros.
+        {/* Todos los clubes: lista */}
+        {!loading &&
+          !error &&
+          clubs.length > 0 &&
+          viewMode === "list" && (
+            <section className="space-y-3">
+              <h2 className="text-lg font-semibold">Todos los clubes</h2>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {filtered.map((club) => (
+                  <Link key={club.slug} href={`/recordings/${club.slug}`}>
+                    <ClubCard
+                      name={club.name}
+                      city={[club.city, club.state]
+                        .filter(Boolean)
+                        .join(", ")}
+                      image={(club.image_url ?? club.image) || undefined}
+                    />
+                  </Link>
+                ))}
+                {filtered.length === 0 && (
+                  <div className="md:col-span-4 text-sm text-muted-foreground">
+                    No se encontraron clubes con esos filtros.
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </section>
+            </section>
+          )}
+
+        {/* Vista mapa */}
+        {!loading &&
+          !error &&
+          clubs.length > 0 &&
+          viewMode === "map" && (
+            <section className="space-y-3">
+              <h2 className="text-lg font-semibold">Mapa de clubes</h2>
+              <p className="text-xs text-muted-foreground">
+                Los pines muestran la ubicación de cada club. Usa los filtros de
+                arriba para reducir el listado y el mapa.
+              </p>
+              <ClubsMap clubs={filtered} userLocation={loc} />
+            </section>
+          )}
       </section>
     </main>
   );

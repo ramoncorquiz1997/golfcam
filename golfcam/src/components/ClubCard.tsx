@@ -4,11 +4,18 @@ import Image from "next/image";
 type Props = { name: string; city: string; image?: string; slug?: string };
 
 export default function ClubCard({ name, city, image }: Props) {
-  const fallback = "/clubs/default.jpg";
+  // Asegúrate de que el fallback apunte a donde realmente está el archivo:
+  const fallback = "/images/clubs/default.jpg";
+
+  const raw = (image || "").trim();
   const imageSrc =
-    image && image.trim() !== ""
-      ? image.startsWith("http") ? image : `/${image.replace(/^\/?/, "")}`
-      : fallback;
+    raw === ""
+      ? fallback
+      : raw.startsWith("http")
+        ? raw
+        : raw.startsWith("/")
+          ? raw
+          : `/${raw}`; // "images/clubs/..." -> "/images/clubs/..."
 
   return (
     <div
@@ -24,6 +31,8 @@ export default function ClubCard({ name, city, image }: Props) {
           src={imageSrc}
           alt={name}
           fill
+          // 👇 esto es la clave: desactiva el optimizador de Next
+          unoptimized
           className="object-contain bg-black/20 transition-opacity hover:opacity-90"
           sizes="(max-width: 768px) 100vw, 33vw"
         />

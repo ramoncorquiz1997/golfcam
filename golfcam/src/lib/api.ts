@@ -22,16 +22,33 @@ export type ApiList<T> = {
 };
 
 // URL base del backend (sin slash final)
-// Ej: NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+// Ej: NEXT_PUBLIC_API_URL=https://clipsazo.com
 const API = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
 
+function apiUrl(path: string): string {
+  // Si ya es URL absoluta, la regresamos tal cual
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+
+  // Asegurarnos de que empiece con /
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+
+  // Si NO hay API configurada (por ejemplo en dev), usar relative
+  if (!API) {
+    return cleanPath;
+  }
+
+  // En prod: NEXT_PUBLIC_API_URL + path
+  return `${API}${cleanPath}`;
+}
 // ---- Helpers genéricos ----
 
 /** Fetch helper con ISR básico */
 async function fetchJSON<T>(url: string): Promise<T> {
   const r = await fetch(url, { next: { revalidate: 60 } });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  return r.json();
+  return r.json() as Promise<T>;
 }
 
 /** Convierte params (incluyendo números) a URLSearchParams */
@@ -45,7 +62,7 @@ function toQuery(params: Record<string, unknown>): URLSearchParams {
   return qs;
 }
 
-// ---- Clubs ----
+// ---- Clubs (público) ----
 
 /** GET /api/clubs con fallback a JSON local + filtros */
 export async function getClubs(
@@ -63,7 +80,6 @@ export async function getClubs(
   // 1) Intenta API real
   if (API) {
     try {
-      // Ej: http://127.0.0.1:8000/api/clubs?limit=100
       return await fetchJSON<ApiList<Club>>(
         `${API}/api/clubs?${qs.toString()}`,
       );
@@ -112,19 +128,18 @@ type AdminTablesResponse = {
 };
 
 /** GET /api/admin/tables -> lista de tablas administrables */
+/** GET /api/admin/tables -> lista de tablas administrables */
 export async function getAdminTables(): Promise<string[]> {
-  if (!API) {
-    console.warn("getAdminTables: API no configurada (NEXT_PUBLIC_API_URL)");
-    return [];
-  }
+  const url = apiUrl("/api/admin/tables");
+
   try {
-    const res = await fetch(`${API}/api/admin/tables`, {
-      cache: "no-store",
-    });
+    const res = await fetch(url, { cache: "no-store" });
+
     if (!res.ok) {
-      console.error("getAdminTables HTTP", res.status);
+      console.error("getAdminTables HTTP", res.status, await res.text());
       return [];
     }
+
     const data = (await res.json()) as AdminTablesResponse;
     console.log("ADMIN TABLES RAW", data);
     return data.tables ?? [];
@@ -139,16 +154,9 @@ export async function getAdminTable(
   name: string,
   params: { limit?: number; offset?: number } = {},
 ): Promise<AdminTableResponse> {
-  if (!API) {
-    throw new Error(
-      "API URL not configured (NEXT_PUBLIC_API_URL no está seteada)",
-    );
-  }
-
   const qs = toQuery(params);
-  const url = `${API}/api/admin/table/${encodeURIComponent(
-    name,
-  )}?${qs.toString()}`;
+  const path = `/api/admin/table/${encodeURIComponent(name)}?${qs.toString()}`;
+  const url = apiUrl(path);
 
   console.log("getAdminTable URL", url);
 
@@ -166,4 +174,60 @@ export async function getAdminTable(
     offset: data.offset,
     items: data.items ?? [],
   };
+}
+
+// ---- Admin: CRUD específico de clubs ----
+
+export type AdminCreateClubPayload = {
+  // slug lo genera el backend según nombre + ciudad
+  name: string;
+  country: string;
+  city?: string;
+  state?: string;
+  lat?: number | null;
+  lon?: number | null;
+  imageFile?: File | null;
+};
+
+/** POST /api/admin/clubs -> crea un club (multipart/form-data) */
+export async function adminCreateClub(
+  payload: AdminCreateClubPayload,
+): Promise<Club> {
+  const form = new FormData();
+  form.set("name", payload.name);
+  form.set("country", payload.country);
+
+  if (payload.city) form.set("city", payload.city);
+  if (payload.state) form.set("state", payload.state);
+  if (payload.lat !== undefined && payload.lat !== null) {
+    form.set("lat", String(payload.lat));
+  }
+  if (payload.lon !== undefined && payload.lon !== null) {
+    form.set("lon", String(payload.lon));
+  }
+  if (payload.imageFile) {
+    form.set("image", payload.imageFile);
+  }
+
+  const res = await fetch("/api/admin/clubs", {
+    method: "POST",
+    body: form,
+  });
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+
+  return res.json() as Promise<Club>;
+}
+
+/** DELETE /api/admin/clubs/:id -> borra un club */
+export async function adminDeleteClub(id: number): Promise<void> {
+  const res = await fetch(`/api/admin/clubs/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
 }

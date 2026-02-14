@@ -11,35 +11,51 @@ type Clip = {
 };
 
 const RECORDINGS_BASE =
-  process.env.RECORDINGS_BASE || "/opt/clipsazo/golfcam/recordings";
+  process.env.RECORDINGS_BASE ?? "/opt/clipsazo/golfcam/recordings";
+
 const PUBLIC_RECORDINGS_PREFIX =
-  process.env.PUBLIC_RECORDINGS_PREFIX || "/recordings";
+  process.env.PUBLIC_RECORDINGS_PREFIX ?? "/recordings";
 
 const FILE_RE = /^(\d{6})\.mp4$/i;
-const hhmmssToHuman = (s: string) =>
-  `${s.slice(0, 2)}:${s.slice(2, 4)}:${s.slice(4, 6)}`;
 
-export async function GET(
-  _req: Request,
-  ctx: { params: Promise<{ slug: string; date: string; court: string }> }
-) {
-  const { slug, date, court } = await ctx.params;
+function hhmmssToHuman(s: string): string {
+  return `${s.slice(0, 2)}:${s.slice(2, 4)}:${s.slice(4, 6)}`;
+}
 
-  // Nueva estructura: <base>/<slug>/<YYYY-MM-DD>/<court>/
+export async function GET(request: Request) {
+  // URL: /api/recordings/[slug]/[date]/[court]
+  const { pathname } = new URL(request.url);
+  const segments = pathname.split("/");
+  // ["", "api", "recordings", slug, date, court]
+  const slug = segments[3];
+  const date = segments[4];
+  const court = segments[5];
+
+  if (!slug || !date || !court) {
+    // Params mal formados → regresamos vacío
+    return NextResponse.json([]);
+  }
+
+  // Estructura en disco: <base>/<slug>/<YYYY-MM-DD>/<court>/
   const absDir = path.join(RECORDINGS_BASE, slug, date, court);
 
-  let entries: string[] = [];
+  let entries: string[];
   try {
     entries = await fs.readdir(absDir);
   } catch {
+    // Si no existe el directorio, regresamos lista vacía
     return NextResponse.json([]);
   }
 
   const clips: Clip[] = [];
+
   for (const name of entries) {
-    const m = name.match(FILE_RE);
-    if (!m) continue;
-    const ts = hhmmssToHuman(m[1]);
+    const match = name.match(FILE_RE);
+    if (!match) continue;
+
+    const tsRaw = match[1]; // "HHMMSS"
+    const ts = hhmmssToHuman(tsRaw);
+
     clips.push({
       url: `${PUBLIC_RECORDINGS_PREFIX}/${slug}/${date}/${court}/${name}`,
       ts,
@@ -48,6 +64,8 @@ export async function GET(
     });
   }
 
+  // Ordenar por nombre de archivo (HHMMSS.mp4) → cronológico
   clips.sort((a, b) => a.name.localeCompare(b.name));
+
   return NextResponse.json(clips);
 }
