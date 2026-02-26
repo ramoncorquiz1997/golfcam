@@ -5,8 +5,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import "leaflet/dist/leaflet.css";
 
 export const metadata = {
-  title: "Clipsazo",
-  description: "Replays instantáneos para campos deportivo",
+  title: "Ripitcam",
+  description: "Replays de tus golpes de golf.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,15 +1,14 @@
-"use client";
+﻿"use client";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import s from "./Navbar.module.css";
 
-/** Permite usar la custom prop CSS --alpha sin recurrir a `any` */
 type CSSVars = React.CSSProperties & { ["--alpha"]?: number };
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const [alpha, setAlpha] = useState(0.86); // alpha base
+  const [alpha, setAlpha] = useState(0.86);
   const [shrink, setShrink] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
 
@@ -28,23 +27,17 @@ export default function Navbar() {
   const headerStyle: CSSVars = { ["--alpha"]: alpha };
 
   return (
-    <header
-      ref={headerRef}
-      className={`${s.header} ${shrink ? s.shrink : ""}`}
-      style={headerStyle}
-    >
+    <header ref={headerRef} className={`${s.header} ${shrink ? s.shrink : ""}`} style={headerStyle}>
       <div className={s.container}>
         <Link href="/" className={s.logo} aria-label="Ripitcam">
-          {/* Desktop */}
           <Image
             src="/images/logo_blanco.png"
-            alt="Clipsazo"
+            alt="Ripitcam"
             width={1024}
             height={287}
             className={s.logoImg}
             priority
           />
-          {/* Móvil */}
           <Image
             src="/images/logo_blanco_icono.png"
             alt="Ripitcam"
@@ -55,12 +48,7 @@ export default function Navbar() {
           />
         </Link>
 
-        <button
-          onClick={() => setOpen(v => !v)}
-          aria-expanded={open}
-          aria-label="Abrir menú"
-          className={s.burger}
-        >
+        <button onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-label="Abrir menu" className={s.burger}>
           {!open ? (
             <svg width="26" height="26" viewBox="0 0 24 24" className={s.icon} aria-hidden="true">
               <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -89,7 +77,7 @@ export default function Navbar() {
             { href: "/recordings", label: "Grabaciones" },
             { href: "/events", label: "Eventos" },
             { href: "/contact", label: "Contacto" },
-          ].map(i => (
+          ].map((i) => (
             <Link key={i.href} href={i.href} className={s.mobileLink} onClick={() => setOpen(false)}>
               {i.label}
             </Link>

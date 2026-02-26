@@ -1,17 +1,12 @@
-/* ===== Navbar.module.css ===== */
+﻿/* ===== Navbar.module.css ===== */
 
 .header{
-  /* color base #FA560B */
-  --brand-r: 250;
-  --brand-g: 86;
-  --brand-b: 11;
-
-  /* alpha viene de inline style; si no llega, usa .86 */
+  --brand-r: 4;
+  --brand-g: 77;
+  --brand-b: 14;
   --alpha: .86;
-
-  /* tamaños */
-  --logo-h-d: 50px;  /* logo desktop */
-  --logo-h-m: 60px;  /* logo móvil */
+  --logo-h-d: 50px;
+  --logo-h-m: 60px;
   --pad-y: 10px;
 
   position: sticky;
@@ -41,7 +36,6 @@
   justify-content: space-between;
 }
 
-/* Logo */
 .logo{ display:inline-flex; align-items:center; gap:10px; text-decoration:none; }
 .logoImg{ height: var(--logo-h-d); width:auto; display:block; }
 .logoImgIcon{ display:none; height: var(--logo-h-m); width:auto; }
@@ -51,7 +45,6 @@
   .logoImgIcon{ display:block; }
 }
 
-/* Nav desktop */
 .navDesktop{ display:flex; align-items:center; gap:40px; }
 .link{
   color:#fff; text-decoration:none; font-weight:800; font-size:1.12rem;
@@ -60,12 +53,10 @@
 }
 .link:hover{ opacity:.92; transform:translateY(-1px); }
 
-/* Burger móvil */
 .burger{ display:none; background:transparent; border:0; color:#fff; padding:6px; }
 .icon{ display:block; }
 @media (max-width:1024px){ .navDesktop{ display:none; } .burger{ display:inline-flex; } }
 
-/* Menú móvil */
 .mobileWrap{
   position: fixed;
   inset: calc(var(--logo-h-m) + var(--pad-y) * 2) 0 auto 0;
@@ -84,9 +75,8 @@
 }
 .mobileLink:active{ background:rgba(255,255,255,.12); }
 
-/* Estado “shrink” al hacer scroll */
 .shrink{
-  --logo-h-d: 56px;     /* baja el tamaño del logo */
-  --alpha: .78;         /* un poco más transparente */
+  --logo-h-d: 56px;
+  --alpha: .78;
   box-shadow: 0 4px 16px rgba(0,0,0,.18);
 }

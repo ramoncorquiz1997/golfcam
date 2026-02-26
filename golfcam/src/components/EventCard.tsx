@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 
 type Props = {
   title: string;
@@ -9,14 +9,7 @@ type Props = {
   image?: string;
 };
 
-export default function EventCard({
-  title,
-  club,
-  date,
-  cta,
-  status,
-  image,
-}: Props) {
+export default function EventCard({ title, club, date, cta, status, image }: Props) {
   const d = new Date(date);
   const fmt = d.toLocaleDateString("es-MX", {
     day: "2-digit",
@@ -27,11 +20,7 @@ export default function EventCard({
   const fallback = "/images/events/default.jpg";
 
   return (
-    <div
-      className="rounded-2xl overflow-hidden bg-white/[0.02] dark:bg-white/[0.03]
-                 shadow-sm transition-transform transform hover:scale-105 hover:shadow-lg"
-    >
-      {/* Imagen */}
+    <div className="rounded-2xl overflow-hidden bg-white/[0.02] dark:bg-white/[0.03] shadow-sm transition-transform transform hover:scale-105 hover:shadow-lg">
       <div className="relative h-40 w-full">
         <Image
           src={image && image.trim() !== "" ? image : fallback}
@@ -44,19 +33,12 @@ export default function EventCard({
       </div>
 
       <div className="p-4">
-        <div className="text-sm text-orange-400 uppercase tracking-wide">
-          {status ?? "Evento"}
-        </div>
+        <div className="text-sm text-green-400 uppercase tracking-wide">{status ?? "Evento"}</div>
         <h3 className="font-semibold text-lg text-foreground">{title}</h3>
-        <p className="text-sm text-muted-foreground">
-          {club} • {fmt}
-        </p>
+        <p className="text-sm text-muted-foreground">{club} • {fmt}</p>
 
         {cta && (
-          <a
-            href={cta}
-            className="inline-block mt-3 text-orange-400 hover:text-orange-300"
-          >
+          <a href={cta} className="inline-block mt-3 text-green-400 hover:text-green-300">
             Ver detalles →
           </a>
         )}

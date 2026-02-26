@@ -1,15 +1,14 @@
-// src/app/clubs/page.tsx
+﻿// src/app/clubs/page.tsx
 import Link from "next/link";
 import ClubCard from "@/components/ClubCard";
 import { getClubs } from "@/lib/api";
 
 export const metadata = {
-  title: "Clubs | Clipsazo",
-  description: "Campos y clubes asociados a Clipsazo",
+  title: "Clubs | Ripitcam",
+  description: "Campos y clubes asociados a Ripitcam",
 };
 
 export default async function ClubsPage() {
-  // ← Aquí pedimos los clubes desde la API o desde JSON si no hay conexión
   const { items: clubs } = await getClubs({ limit: 100 });
 
   return (
@@ -19,11 +18,7 @@ export default async function ClubsPage() {
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {clubs.map((c) => (
-            <Link
-              key={c.slug}
-              href={`/recordings/${c.slug}`}
-              className="group block"
-            >
+            <Link key={c.slug} href={`/recordings/${c.slug}`} className="group block">
               <ClubCard
                 name={c.name}
                 city={[c.city, c.state].filter(Boolean).join(", ")}

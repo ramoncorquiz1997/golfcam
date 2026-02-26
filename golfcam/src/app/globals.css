@@ -1,20 +1,17 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
-/* ====== Tema base (light por defecto) ====== */
 :root {
-  --background: #e9f2f8;       /* gris azulado claro */
-  --foreground: #0b1220;       /* texto oscuro */
-  --primary: #ea580c;          /* naranja principal */
-  --secondary: #f97316;        /* naranja secundario */
-  --brand: #FA560B;
+  --background: #e9f2f8;
+  --foreground: #0b1220;
+  --primary: #044d0e;
+  --secondary: #0a6b18;
+  --brand: #044d0e;
 
-  /* Navbar */
   --bg-navbar: rgba(255, 255, 255, 0.7);
-  --tint-navbar: rgba(250, 86, 11, 0.12);
+  --tint-navbar: rgba(4, 77, 14, 0.12);
   --border-navbar: rgba(0, 0, 0, 0.08);
 }
 
-/* ====== Variables Tailwind ====== */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -24,23 +21,20 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* ====== Dark mode automático ====== */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #071127;     /* azul oscuro */
-    --foreground: #e6eef6;     /* texto claro */
-    --primary: #fb923c;        /* naranja más brillante */
-    --secondary: #fdba74;      /* acento naranja claro */
-    --brand: #FA560B;
+    --background: #071127;
+    --foreground: #e6eef6;
+    --primary: #0e7a1a;
+    --secondary: #2ca33f;
+    --brand: #044d0e;
 
-    /* Navbar */
     --bg-navbar: rgba(15, 18, 25, 0.55);
-    --tint-navbar: rgba(250, 86, 11, 0.28);
+    --tint-navbar: rgba(4, 77, 14, 0.3);
     --border-navbar: rgba(255, 255, 255, 0.08);
   }
 }
 
-/* ====== Base ====== */
 html, body {
   background: var(--background);
   color: var(--foreground);
@@ -67,7 +61,7 @@ html, body {
   border-radius: 9999px;
   overflow: hidden;
   border: 2px solid #ffffff;
-  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.85); /* aro verde estilo Clipsazo */
+  box-shadow: 0 0 0 2px rgba(4, 77, 14, 0.85);
 }
 
 .club-pin-inner img {
