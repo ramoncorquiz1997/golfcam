@@ -1,5 +1,5 @@
--- =========================
--- CLIPS – Esquema inicial
+﻿-- =========================
+-- CLIPSAZO - Esquema inicial (Golf)
 -- =========================
 
 -- --------
@@ -22,7 +22,6 @@ CREATE TABLE IF NOT EXISTS clubs (
 CREATE INDEX IF NOT EXISTS idx_clubs_country_state_city
   ON clubs (country, state, city);
 
--- Mantén updated_at al día
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -36,30 +35,33 @@ BEFORE UPDATE ON clubs
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 -- --------
--- COURTS
+-- HOLES
 -- --------
-CREATE TABLE IF NOT EXISTS courts (
+CREATE TABLE IF NOT EXISTS holes (
   id         SERIAL PRIMARY KEY,
   club_id    INTEGER NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
   slug       TEXT NOT NULL,
   name       TEXT NOT NULL,
+  number     SMALLINT,
+  par        SMALLINT,
+  yardage    INTEGER,
   image_url  TEXT,
   UNIQUE (club_id, slug)
 );
 
-CREATE INDEX IF NOT EXISTS idx_courts_club ON courts (club_id);
+CREATE INDEX IF NOT EXISTS idx_holes_club ON holes (club_id);
 
 -- --------
 -- EVENTS
 -- --------
--- status sugeridos: 'preregistro' | 'abierto' | 'cerrado' | 'finalizado'
+-- status: 'preregistro' | 'abierto' | 'cerrado' | 'finalizado'
 CREATE TABLE IF NOT EXISTS events (
-  id        TEXT PRIMARY KEY,         -- ej. 'ens-otono', 'bajamar-proam'
-  title     TEXT NOT NULL,
-  club_id   INTEGER REFERENCES clubs(id) ON DELETE SET NULL,
-  date      DATE NOT NULL,
-  cta       TEXT,                     -- URL o '#'
-  status    TEXT NOT NULL CHECK (status IN ('preregistro','abierto','cerrado','finalizado')),
+  id         TEXT PRIMARY KEY,
+  title      TEXT NOT NULL,
+  club_id    INTEGER REFERENCES clubs(id) ON DELETE SET NULL,
+  date       DATE NOT NULL,
+  cta        TEXT,
+  status     TEXT NOT NULL CHECK (status IN ('preregistro','abierto','cerrado','finalizado')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

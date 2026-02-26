@@ -1,4 +1,4 @@
-# clipsazo/routes/admin.py
+﻿# clipsazo/routes/admin.py
 from flask import Blueprint, request, jsonify
 from ..db import get_conn
 from ..models import rows_to_dicts
@@ -9,22 +9,14 @@ import unicodedata
 
 bp = Blueprint("admin", __name__, url_prefix="/api/admin")
 
-# -------------------------------------------------------------------
-# Config: ruta donde se guardan las imágenes de clubs
-# -------------------------------------------------------------------
-# Por defecto: /opt/clipsazo/golfcam/public/images/clubs
 CLUB_IMAGE_DIR = os.environ.get(
     "CLUB_IMAGES_DIR",
     "/opt/clipsazo/golfcam/public/images/clubs",
 )
 
-# -------------------------------------------------------------------
-# Helpers para slug / nombre de archivo
-# -------------------------------------------------------------------
-
 
 def _slugify(value: str) -> str:
-    """Convierte 'Costa Padel Ensenada' -> 'costa_padel_ensenada'"""
+    """Convierte 'Valle Dorado Golf' -> 'valle_dorado_golf'"""
     value_norm = unicodedata.normalize("NFKD", value)
     value_ascii = value_norm.encode("ascii", "ignore").decode("ascii")
     value_clean = re.sub(r"[^a-zA-Z0-9]+", "_", value_ascii)
@@ -33,10 +25,6 @@ def _slugify(value: str) -> str:
 
 
 def _generate_club_slug(name: str, city: str | None, conn) -> str:
-    """
-    Genera un slug único a partir de name + city.
-    Si ya existe, le agrega _2, _3, etc.
-    """
     base_text = f"{name}_{city}" if city else name
     base = _slugify(base_text)
 
@@ -51,17 +39,14 @@ def _generate_club_slug(name: str, city: str | None, conn) -> str:
             i += 1
 
 
-# -------------------------------------------------------------------
-# Tablas que permitimos ver desde el admin (solo lectura genérica)
-# -------------------------------------------------------------------
 ALLOWED_TABLES = {
     "clubs": """
         SELECT id, slug, name, city, state, country, lat, lon, image_url, created_at
         FROM clubs
     """,
-    "courts": """
-        SELECT id, club_id, slug, name, image_url
-        FROM courts
+    "holes": """
+        SELECT id, club_id, slug, name, number, par, yardage, image_url
+        FROM holes
     """,
     "events": """
         SELECT id, title, club_id, date, status, cta, created_at
@@ -72,32 +57,16 @@ ALLOWED_TABLES = {
 
 @bp.get("/tables")
 def admin_tables():
-    """
-    Devuelve la lista de tablas administrables para el front.
-    Ejemplo de respuesta:
-    { "tables": ["clubs", "courts", "events"] }
-    """
     return jsonify({"tables": list(ALLOWED_TABLES.keys())})
 
 
 @bp.get("/table/<name>")
 def admin_table(name: str):
-    """
-    Devuelve filas de la tabla indicada (solo lectura).
-    Respuesta:
-    {
-      "table": "clubs",
-      "limit": 50,
-      "offset": 0,
-      "items": [ ... ]
-    }
-    """
     name = name.strip()
 
     if name not in ALLOWED_TABLES:
         return jsonify({"error": "table not allowed"}), 404
 
-    # Paginación básica con try/except por si mandan basura
     try:
         limit = max(1, min(int(request.args.get("limit", 50)), 200))
     except (TypeError, ValueError):
@@ -130,17 +99,8 @@ def admin_table(name: str):
     )
 
 
-# -------------------------------------------------------------------
-# CRUD específico de clubs para el panel (listar / crear / borrar)
-# -------------------------------------------------------------------
-
-
 @bp.get("/clubs")
 def admin_list_clubs():
-    """
-    Lista rápida de clubs. No la está usando el front ahorita,
-    pero es útil para depurar.
-    """
     conn = get_conn()
     with conn.cursor() as cur:
         cur.execute(
@@ -156,36 +116,8 @@ def admin_list_clubs():
 
 @bp.post("/clubs")
 def admin_create_club():
-    """
-    Crea un nuevo club.
-
-    Soporta dos modos:
-
-    1) JSON (por scripts / herramientas):
-       Content-Type: application/json
-       {
-         "slug": "san_marino_padel",
-         "name": "San Marino Padel",
-         "country": "México",
-         "city": "Ensenada",
-         "state": "Baja California",
-         "image_url": "images/clubs/san_marino_padel.jpg",
-         "lat": 31.123,
-         "lon": -116.123
-       }
-
-    2) multipart/form-data (desde el panel admin con upload):
-       - name (obligatorio)
-       - country (obligatorio)
-       - city, state, lat, lon (opcionales)
-       - slug (opcional, si no viene se genera)
-       - image_url (opcional, si no hay archivo se usa tal cual)
-       - image (archivo opcional; si viene, se guarda como images/clubs/<slug>.<ext>)
-    """
-
     conn = get_conn()
 
-    # Detectamos si es JSON o form-data
     ctype = request.content_type or ""
     is_json = "application/json" in ctype
 
@@ -219,17 +151,12 @@ def admin_create_club():
     if not name or not country:
         return jsonify({"error": "name y country son obligatorios"}), 400
 
-    # slug: si te lo mandan lo respetas, si no, lo generas
-    if slug_input:
-        slug = slug_input
-    else:
-        slug = _generate_club_slug(name, city, conn)
+    slug = slug_input or _generate_club_slug(name, city, conn)
 
     image_file = request.files.get("image") if not is_json else None
     image_url: str | None = None
 
     if image_file and image_file.filename:
-        # Caso: archivo subido → lo guardamos en images/clubs/<slug>.<ext>
         _, ext = os.path.splitext(image_file.filename)
         ext = (ext or ".jpg").lower()
 
@@ -240,7 +167,6 @@ def admin_create_club():
 
         image_url = f"images/clubs/{filename}"
     else:
-        # Si no hay archivo pero sí image_url_input, se usa directo
         image_url = image_url_input
 
     with conn.cursor() as cur:
@@ -259,9 +185,6 @@ def admin_create_club():
 
 @bp.delete("/clubs/<int:club_id>")
 def admin_delete_club(club_id: int):
-    """
-    Elimina un club por id.
-    """
     conn = get_conn()
     with conn.cursor() as cur:
         cur.execute("DELETE FROM clubs WHERE id = %s", (club_id,))

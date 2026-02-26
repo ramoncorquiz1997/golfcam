@@ -34,7 +34,7 @@ export default function Navbar() {
       style={headerStyle}
     >
       <div className={s.container}>
-        <Link href="/" className={s.logo} aria-label="Clipsazo">
+        <Link href="/" className={s.logo} aria-label="Ripitcam">
           {/* Desktop */}
           <Image
             src="/images/logo_blanco.png"
@@ -47,7 +47,7 @@ export default function Navbar() {
           {/* Móvil */}
           <Image
             src="/images/logo_blanco_icono.png"
-            alt="Clipsazo"
+            alt="Ripitcam"
             width={320}
             height={88}
             className={s.logoImgIcon}

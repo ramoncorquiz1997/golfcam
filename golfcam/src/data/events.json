@@ -1,4 +1,4 @@
-[
-    { "id": "ens-otono", "title": "Torneo de Padel Juvenil ", "club": "Palmas Padel", "date": "2025-11-15", "cta": "#", "status": "preregistro" },
-    { "id": "padelnoret-pro", "title": "PadelNorte Pro Torneo", "club": "Padel Norte", "date": "2025-11-08", "cta": "#", "status":"abierto"}
-  ]
+﻿[
+  { "id": "valle-abierto", "title": "Torneo Abierto de Golf", "club": "Valle Dorado Golf Club", "date": "2026-03-15", "cta": "#", "status": "preregistro" },
+  { "id": "pacifico-proam", "title": "Pacifico Pro-Am", "club": "Pacifico Golf Resort", "date": "2026-04-05", "cta": "#", "status": "abierto" }
+]

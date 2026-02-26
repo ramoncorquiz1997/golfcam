@@ -1,4 +1,4 @@
-// src/app/recordings/[slug]/[date]/[court]/page.tsx
+﻿// src/app/recordings/[slug]/[date]/[hole]/page.tsx
 "use client";
 
 import Image from "next/image";
@@ -6,25 +6,26 @@ import clubs from "@/data/clubs.json";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { bucketVideosToSlots, type Slot } from "@/lib/timeSlots";
-import { getVideosForCourtByDate, type Clip } from "@/lib/getData";
+import { getVideosForHoleByDate, type Clip } from "@/lib/getData";
 import PreRollAd from "@/components/PreRollAd";
 
-type Court = { slug: string; name: string; image?: string };
-type Club  = { slug: string; name: string; city: string; courts?: Court[] };
+type Hole = { slug: string; name: string; image?: string };
+type Club = { slug: string; name: string; city: string; holes?: Hole[]; courts?: Hole[] };
 
-export default function CourtByDatePage() {
-  const { slug, date, court } = useParams() as { slug: string; date: string; court: string };
+export default function HoleByDatePage() {
+  const { slug, date, hole } = useParams() as { slug: string; date: string; hole: string };
   const router = useRouter();
 
-  const club = useMemo(() => (clubs as Club[]).find(c => c.slug === slug), [slug]);
-  const courtData = useMemo(() => club?.courts?.find(ct => ct.slug === court), [club, court]);
+  const club = useMemo(() => (clubs as Club[]).find((c) => c.slug === slug), [slug]);
+  const holeList = useMemo(() => club?.holes ?? club?.courts ?? [], [club]);
+  const holeData = useMemo(() => holeList.find((h) => h.slug === hole), [holeList, hole]);
 
   useEffect(() => {
-    if (!club || !courtData || typeof date !== "string") router.replace("/recordings");
-  }, [club, courtData, date, router]);
+    if (!club || !holeData || typeof date !== "string") router.replace("/recordings");
+  }, [club, holeData, date, router]);
 
   const [adDone, setAdDone] = useState(false);
-  const adSrc = `/ads/${slug}/${court}.mp4`;
+  const adSrc = `/ads/${slug}/${hole}.mp4`;
 
   const [slots, setSlots] = useState<Slot<Clip>[]>([]);
   const [currentSlotKey, setCurrentSlotKey] = useState<string | null>(null);
@@ -34,10 +35,10 @@ export default function CourtByDatePage() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      if (!club || !courtData) return;
+      if (!club || !holeData) return;
       setLoading(true);
 
-      const clips = await getVideosForCourtByDate(slug, court, date);
+      const clips = await getVideosForHoleByDate(slug, hole, date);
       const s = bucketVideosToSlots<Clip>(clips, { stepMin: 60, startHour: 0, endHour: 24 });
 
       if (!alive) return;
@@ -54,10 +55,12 @@ export default function CourtByDatePage() {
 
       setLoading(false);
     })();
-    return () => { alive = false; };
-  }, [slug, court, date, club, courtData]);
+    return () => {
+      alive = false;
+    };
+  }, [slug, hole, date, club, holeData]);
 
-  const currentSlot = slots.find(x => x.key === currentSlotKey) || null;
+  const currentSlot = slots.find((x) => x.key === currentSlotKey) || null;
   const downloadUrl = currentVideo?.url ?? "";
 
   return (
@@ -67,25 +70,25 @@ export default function CourtByDatePage() {
           src={adSrc}
           onDone={() => setAdDone(true)}
           skippableAfter={10}
-          label={`Patrocinio de la cancha ${courtData?.name ?? ""}`}
+          label={`Patrocinio del hoyo ${holeData?.name ?? ""}`}
         />
       )}
 
       <section className="max-w-6xl mx-auto px-4 py-10 space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">{club?.name} — {courtData?.name}</h1>
-          <p className="text-sm text-muted-foreground">{club?.city} • {date}</p>
+          <h1 className="text-3xl font-bold">{club?.name} - {holeData?.name}</h1>
+          <p className="text-sm text-muted-foreground">{club?.city} - {date}</p>
         </div>
 
         <section className="space-y-3">
           <h2 className="text-lg font-semibold">Horarios con video</h2>
           {loading ? (
-            <div className="text-muted-foreground">Cargando…</div>
+            <div className="text-muted-foreground">Cargando...</div>
           ) : slots.length === 0 ? (
-            <div className="text-muted-foreground">No hay videos para esta cancha en esta fecha.</div>
+            <div className="text-muted-foreground">No hay videos para este hoyo en esta fecha.</div>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {slots.map(slot => {
+              {slots.map((slot) => {
                 const active = currentSlotKey === slot.key;
                 return (
                   <button
@@ -96,9 +99,7 @@ export default function CourtByDatePage() {
                     }}
                     className={[
                       "px-3 py-1.5 rounded-lg border text-sm transition",
-                      active
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-card hover:ring-1 hover:ring-primary/40"
+                      active ? "border-primary bg-primary/10 text-primary" : "border-border bg-card hover:ring-1 hover:ring-primary/40",
                     ].join(" ")}
                   >
                     {slot.label} ({slot.items.length})
@@ -118,7 +119,9 @@ export default function CourtByDatePage() {
             <div className="aspect-video w-full rounded-xl border border-border bg-black/80 grid place-items-center text-white/60">
               {currentVideo ? (
                 <video key={currentVideo.url} src={currentVideo.url} controls className="w-full h-full rounded-xl" />
-              ) : ("Sin selección")}
+              ) : (
+                "Sin seleccion"
+              )}
             </div>
 
             <div className="flex items-center gap-3">
@@ -129,14 +132,12 @@ export default function CourtByDatePage() {
                   "inline-flex items-center justify-center px-4 py-2 rounded-lg",
                   "bg-primary text-primary-foreground hover:opacity-90 transition",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background",
-                  !currentVideo && "pointer-events-none opacity-50"
+                  !currentVideo && "pointer-events-none opacity-50",
                 ].join(" ")}
               >
                 Descargar video
               </a>
-              {currentVideo?.label && (
-                <span className="text-xs text-muted-foreground">{currentVideo.label}</span>
-              )}
+              {currentVideo?.label && <span className="text-xs text-muted-foreground">{currentVideo.label}</span>}
             </div>
           </div>
 
@@ -152,12 +153,10 @@ export default function CourtByDatePage() {
                         onClick={() => setCurrentVideo(clip)}
                         className={[
                           "w-full flex items-center gap-3 p-2 rounded-lg border text-left transition bg-card",
-                          active ? "border-primary bg-primary/10" : "border-border hover:ring-1 hover:ring-primary/40"
+                          active ? "border-primary bg-primary/10" : "border-border hover:ring-1 hover:ring-primary/40",
                         ].join(" ")}
                       >
-                        {clip.thumb && (
-                          <Image src={clip.thumb} alt="" width={64} height={40} className="object-cover rounded" />
-                        )}
+                        {clip.thumb && <Image src={clip.thumb} alt="" width={64} height={40} className="object-cover rounded" />}
                         <div className="text-sm">
                           <div className="font-medium">{clip.label ?? "Clip"}</div>
                           <div className="text-muted-foreground">{clip.ts}</div>
