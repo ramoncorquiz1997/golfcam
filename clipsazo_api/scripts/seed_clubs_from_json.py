@@ -29,7 +29,7 @@ print(f"[INFO] Leyendo JSON desde: {JSON_PATH}")
 conn = psycopg.connect(DB_URL)
 cur = conn.cursor()
 
-with open(JSON_PATH, "r", encoding="utf-8") as f:
+with open(JSON_PATH, "r", encoding="utf-8-sig") as f:
     clubs = json.load(f)
 
 for c in clubs:
