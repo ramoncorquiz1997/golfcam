@@ -10,7 +10,7 @@ type Clip = {
   name: string;
 };
 
-const RECORDINGS_BASE = process.env.RECORDINGS_BASE ?? "/opt/clipsazo/golfcam/recordings";
+const RECORDINGS_BASE = process.env.RECORDINGS_BASE ?? "/root/golfcam/golfcam/recordings";
 const PUBLIC_RECORDINGS_PREFIX = process.env.PUBLIC_RECORDINGS_PREFIX ?? "/recordings";
 const FILE_RE = /^(\d{6})\.mp4$/i;
 

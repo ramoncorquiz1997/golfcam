@@ -28,5 +28,33 @@
       { "slug": "hoyo-b", "name": "Hoyo B", "number": 2, "par": 4, "yardage": 430, "image": "images/canchas/default.jpg" },
       { "slug": "hoyo-c", "name": "Hoyo C", "number": 3, "par": 3, "yardage": 165, "image": "images/canchas/default.jpg" }
     ]
+  },
+  {
+    "slug": "baja-country-club",
+    "name": "Baja Country Club",
+    "city": "Ensenada",
+    "state": "Baja California",
+    "country": "Mexico",
+    "image": "images/clubs/default.jpg",
+    "holes": [
+      { "slug": "hoyo_1", "name": "Hoyo 1", "number": 1, "par": 4, "yardage": 390, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_2", "name": "Hoyo 2", "number": 2, "par": 4, "yardage": 405, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_3", "name": "Hoyo 3", "number": 3, "par": 3, "yardage": 175, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_4", "name": "Hoyo 4", "number": 4, "par": 5, "yardage": 520, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_5", "name": "Hoyo 5", "number": 5, "par": 4, "yardage": 410, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_6", "name": "Hoyo 6", "number": 6, "par": 4, "yardage": 395, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_7", "name": "Hoyo 7", "number": 7, "par": 3, "yardage": 165, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_8", "name": "Hoyo 8", "number": 8, "par": 5, "yardage": 535, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_9", "name": "Hoyo 9", "number": 9, "par": 4, "yardage": 420, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_10", "name": "Hoyo 10", "number": 10, "par": 4, "yardage": 400, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_11", "name": "Hoyo 11", "number": 11, "par": 4, "yardage": 415, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_12", "name": "Hoyo 12", "number": 12, "par": 3, "yardage": 180, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_13", "name": "Hoyo 13", "number": 13, "par": 5, "yardage": 545, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_14", "name": "Hoyo 14", "number": 14, "par": 4, "yardage": 425, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_15", "name": "Hoyo 15", "number": 15, "par": 4, "yardage": 410, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_16", "name": "Hoyo 16", "number": 16, "par": 3, "yardage": 170, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_17", "name": "Hoyo 17", "number": 17, "par": 5, "yardage": 530, "image": "images/canchas/default.jpg" },
+      { "slug": "hoyo_18", "name": "Hoyo 18", "number": 18, "par": 4, "yardage": 435, "image": "images/canchas/default.jpg" }
+    ]
   }
 ]
