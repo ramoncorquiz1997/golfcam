@@ -1,11 +1,11 @@
-import "@/app/globals.css";
+﻿import "@/app/globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "leaflet/dist/leaflet.css";
 
 export const metadata = {
-  title: "Ripitcam",
+  title: "Ripit",
   description: "Replays de tus golpes de golf.",
 };
 

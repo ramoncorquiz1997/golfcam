@@ -21,7 +21,7 @@ const contactMethods: ContactMethod[] = [
   {
     title: "Operaciones y soporte",
     description: "Hardware, mantenimiento y monitoreo en vivo para tus campos.",
-    email: "soporte@ripitcam.com",
+    email: "soporte@ripit.com",
     phone: "+52 646-109-3684",
     schedule: "Lun - Vie · 09:00 a 19:00 h (Tijuana, Mexico)",
     icon: (
@@ -34,7 +34,7 @@ const contactMethods: ContactMethod[] = [
   {
     title: "Nuevos proyectos",
     description: "Cotiza instalaciones, paquetes de camaras o licencias para tu club.",
-    email: "hola@ripitcam.com",
+    email: "hola@ripit.com",
     phone: "+52 646-109-3694",
     schedule: "Disponibles tambien sabados por cita",
     icon: (
@@ -47,7 +47,7 @@ const contactMethods: ContactMethod[] = [
   {
     title: "Prensa y alianzas",
     description: "Coberturas especiales, sponsors o proyectos con federaciones.",
-    email: "partners@ripitcam.com",
+    email: "partners@ripit.com",
     phone: "+52 646-109-3694",
     schedule: "Respuesta en menos de 24 h",
     icon: (
@@ -62,7 +62,7 @@ const contactMethods: ContactMethod[] = [
   {
     title: "Facturacion",
     description: "Actualizacion de planes, pagos internacionales y reportes.",
-    email: "finance@ripitcam.com",
+    email: "finance@ripit.com",
     phone: "+52 646-109-3684",
     schedule: "Lun - Vie · 10:00 a 18:00 h (Tijuana, Mexico)",
     icon: (
@@ -81,7 +81,7 @@ export default function ContactPage() {
       <div className="absolute -bottom-32 left-[-120px] h-72 w-72 rounded-full bg-emerald-500/20 blur-[110px]" aria-hidden />
 
       <section className="relative isolate px-6 py-24 sm:py-32 text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.32em] text-green-400">Contacto Ripitcam</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.32em] text-green-400">Contacto Ripit</p>
         <h1 className="mt-6 text-4xl font-semibold leading-tight sm:text-5xl lg:text-6xl">
           Conecta tu club deportivo con video inteligente y soporte experto
         </h1>
@@ -91,7 +91,7 @@ export default function ContactPage() {
         </p>
 
         <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-          <a href="mailto:hola@ripitcam.com" className="inline-flex items-center justify-center rounded-full bg-green-800 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-green-900/30 transition hover:bg-green-700">
+          <a href="mailto:hola@ripit.com" className="inline-flex items-center justify-center rounded-full bg-green-800 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-green-900/30 transition hover:bg-green-700">
             Escribenos
           </a>
           <a href="https://wa.me/526461093694" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-full border border-foreground/20 px-6 py-3 text-base font-semibold transition hover:border-green-400 hover:text-green-400">
@@ -145,11 +145,11 @@ export default function ContactPage() {
               para tu club o evento.
             </p>
 
-            <form className="mt-8 space-y-6" action="mailto:hola@ripitcam.com" method="POST" encType="text/plain">
+            <form className="mt-8 space-y-6" action="mailto:hola@ripit.com" method="POST" encType="text/plain">
               {[
                 { name: "nombre", label: "Nombre completo", type: "text", placeholder: "Andrea Lopez" },
                 { name: "correo", label: "Correo electronico", type: "email", placeholder: "tu@email.com" },
-                { name: "club", label: "Club o empresa", type: "text", placeholder: "Ripitcam Golf Club" },
+                { name: "club", label: "Club o empresa", type: "text", placeholder: "Ripit Golf Club" },
               ].map((f) => (
                 <label key={f.name} className="block text-sm font-medium">
                   {f.label}
@@ -193,3 +193,4 @@ export default function ContactPage() {
     </main>
   );
 }
+

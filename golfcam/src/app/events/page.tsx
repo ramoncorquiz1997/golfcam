@@ -3,7 +3,7 @@ import events from "@/data/events.json";
 import EventCard from "@/components/EventCard";
 
 export const metadata = {
-  title: "Eventos | Ripitcam",
+  title: "Eventos | Ripit",
   description: "Proximos torneos y actividades",
 };
 
@@ -22,3 +22,4 @@ export default function EventsPage() {
     </main>
   );
 }
+

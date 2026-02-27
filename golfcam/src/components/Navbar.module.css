@@ -5,8 +5,6 @@
   --brand-g: 77;
   --brand-b: 14;
   --alpha: .86;
-  --logo-h-d: 50px;
-  --logo-h-m: 60px;
   --pad-y: 10px;
 
   position: sticky;
@@ -36,13 +34,18 @@
   justify-content: space-between;
 }
 
-.logo{ display:inline-flex; align-items:center; gap:10px; text-decoration:none; }
-.logoImg{ height: var(--logo-h-d); width:auto; display:block; }
-.logoImgIcon{ display:none; height: var(--logo-h-m); width:auto; }
+.logo{
+  display:inline-flex;
+  align-items:center;
+  text-decoration:none;
+}
 
-@media (max-width:768px){
-  .logoImg{ display:none; }
-  .logoImgIcon{ display:block; }
+.logoText{
+  color:#fff;
+  font-weight:900;
+  font-size:clamp(1.5rem, 2.4vw, 2.15rem);
+  letter-spacing:.04em;
+  line-height:1;
 }
 
 .navDesktop{ display:flex; align-items:center; gap:40px; }
@@ -59,8 +62,8 @@
 
 .mobileWrap{
   position: fixed;
-  inset: calc(var(--logo-h-m) + var(--pad-y) * 2) 0 auto 0;
-  height: calc(100vh - (var(--logo-h-m) + var(--pad-y) * 2));
+  inset: calc(2.25rem + var(--pad-y) * 2) 0 auto 0;
+  height: calc(100vh - (2.25rem + var(--pad-y) * 2));
   background: rgba(var(--brand-r), var(--brand-g), var(--brand-b), .94);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -76,7 +79,6 @@
 .mobileLink:active{ background:rgba(255,255,255,.12); }
 
 .shrink{
-  --logo-h-d: 56px;
   --alpha: .78;
   box-shadow: 0 4px 16px rgba(0,0,0,.18);
 }

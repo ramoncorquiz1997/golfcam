@@ -1,6 +1,5 @@
 ﻿"use client";
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import s from "./Navbar.module.css";
 
@@ -29,23 +28,8 @@ export default function Navbar() {
   return (
     <header ref={headerRef} className={`${s.header} ${shrink ? s.shrink : ""}`} style={headerStyle}>
       <div className={s.container}>
-        <Link href="/" className={s.logo} aria-label="Ripitcam">
-          <Image
-            src="/images/logo_blanco.png"
-            alt="Ripitcam"
-            width={1024}
-            height={287}
-            className={s.logoImg}
-            priority
-          />
-          <Image
-            src="/images/logo_blanco_icono.png"
-            alt="Ripitcam"
-            width={320}
-            height={88}
-            className={s.logoImgIcon}
-            priority
-          />
+        <Link href="/" className={s.logo} aria-label="Ripit">
+          <span className={s.logoText}>Ripit</span>
         </Link>
 
         <button onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-label="Abrir menu" className={s.burger}>

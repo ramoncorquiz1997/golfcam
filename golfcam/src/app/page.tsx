@@ -54,7 +54,7 @@ export default function Home() {
               Replays • Torneos • Clubes
             </p>
             <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-semibold leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.4)]">
-              Ripitcam: video inteligente para golfistas
+              Ripit: video inteligente para golfistas
             </h1>
             <p className="mt-3 text-lg text-muted-foreground max-w-xl drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">
               Revive las mejores jugadas y compartelas al momento. Instalacion rapida,
@@ -132,3 +132,4 @@ export default function Home() {
     </main>
   );
 }
+

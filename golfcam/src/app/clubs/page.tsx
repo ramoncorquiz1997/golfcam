@@ -4,8 +4,8 @@ import ClubCard from "@/components/ClubCard";
 import { getClubs } from "@/lib/api";
 
 export const metadata = {
-  title: "Clubs | Ripitcam",
-  description: "Campos y clubes asociados a Ripitcam",
+  title: "Clubs | Ripit",
+  description: "Campos y clubes asociados a Ripit",
 };
 
 export default async function ClubsPage() {
@@ -32,3 +32,4 @@ export default async function ClubsPage() {
     </main>
   );
 }
+

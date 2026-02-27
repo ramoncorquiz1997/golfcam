@@ -1,35 +1,5 @@
 ﻿[
   {
-    "slug": "valle-dorado-golf",
-    "name": "Valle Dorado Golf Club",
-    "city": "Ensenada",
-    "state": "Baja California",
-    "country": "Mexico",
-    "lat": 31.86772,
-    "lon": -116.657822,
-    "image": "images/clubs/default.jpg",
-    "holes": [
-      { "slug": "hoyo-1", "name": "Hoyo 1", "number": 1, "par": 4, "yardage": 410, "image": "images/canchas/default.jpg" },
-      { "slug": "hoyo-2", "name": "Hoyo 2", "number": 2, "par": 3, "yardage": 178, "image": "images/canchas/default.jpg" },
-      { "slug": "hoyo-3", "name": "Hoyo 3", "number": 3, "par": 5, "yardage": 522, "image": "images/canchas/default.jpg" }
-    ]
-  },
-  {
-    "slug": "pacifico-golf",
-    "name": "Pacifico Golf Resort",
-    "city": "Ensenada",
-    "state": "Baja California",
-    "country": "Mexico",
-    "lat": 31.84915,
-    "lon": -116.61130,
-    "image": "images/clubs/default.jpg",
-    "holes": [
-      { "slug": "hoyo-a", "name": "Hoyo A", "number": 1, "par": 4, "yardage": 395, "image": "images/canchas/default.jpg" },
-      { "slug": "hoyo-b", "name": "Hoyo B", "number": 2, "par": 4, "yardage": 430, "image": "images/canchas/default.jpg" },
-      { "slug": "hoyo-c", "name": "Hoyo C", "number": 3, "par": 3, "yardage": 165, "image": "images/canchas/default.jpg" }
-    ]
-  },
-  {
     "slug": "baja-country-club",
     "name": "Baja Country Club",
     "city": "Ensenada",
