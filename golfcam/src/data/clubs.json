@@ -5,7 +5,7 @@
     "city": "Ensenada",
     "state": "Baja California",
     "country": "Mexico",
-    "image": "images/clubs/default.jpg",
+    "image": "images/clubs/BCC.jpg",
     "holes": [
       { "slug": "hoyo_1", "name": "Hoyo 1", "number": 1, "par": 4, "yardage": 390, "image": "images/canchas/default.jpg" },
       { "slug": "hoyo_2", "name": "Hoyo 2", "number": 2, "par": 4, "yardage": 405, "image": "images/canchas/default.jpg" },
