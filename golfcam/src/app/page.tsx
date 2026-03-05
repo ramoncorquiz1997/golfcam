@@ -35,66 +35,48 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-background text-foreground transition-colors duration-500 relative overflow-hidden">
-      <div className="absolute inset-x-0 top-[-240px] mx-auto h-[480px] w-[480px] rounded-full bg-green-900/25 blur-[140px]" aria-hidden />
+      <div className="absolute inset-x-0 top-[-240px] mx-auto h-[480px] w-[480px] rounded-full bg-[#088f26]/20 blur-[140px]" aria-hidden />
       <div className="absolute -bottom-32 left-[-120px] h-72 w-72 rounded-full bg-emerald-500/20 blur-[110px]" aria-hidden />
 
-      <section className="relative isolate overflow-hidden">
-        <video autoPlay loop muted playsInline poster="/hero.jpg" className="absolute inset-0 h-full w-full object-cover">
+      <section className="relative isolate overflow-hidden bg-background min-h-[62vh] sm:min-h-[66vh]">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          poster="/hero.jpg"
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{
+            WebkitMaskImage:
+              "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 62%, rgba(0,0,0,0.92) 72%, rgba(0,0,0,0.55) 86%, rgba(0,0,0,0) 100%)",
+            maskImage:
+              "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 62%, rgba(0,0,0,0.92) 72%, rgba(0,0,0,0.55) 86%, rgba(0,0,0,0) 100%)",
+          }}
+        >
           <source src="/hero.mp4" type="video/mp4" />
         </video>
 
-        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/40 to-transparent backdrop-blur-[4px]" />
-
-        <div className="absolute -top-40 left-1/2 h-[480px] w-[480px] -translate-x-1/2 rounded-full bg-green-900/25 blur-[140px]" aria-hidden />
-        <div className="absolute -bottom-32 left-[-120px] h-72 w-72 rounded-full bg-emerald-500/20 blur-[110px]" aria-hidden />
-
-        <div className="relative mx-auto max-w-6xl px-4 pt-40 pb-16 text-foreground">
+        <div className="relative mx-auto flex min-h-[62vh] max-w-6xl items-end px-4 pb-14 text-foreground sm:min-h-[66vh]">
           <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.32em] text-green-400">
-              Replays • Torneos • Clubes
-            </p>
             <h1 className="mt-4 text-4xl sm:text-5xl lg:text-6xl font-semibold leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.4)]">
-              Ripit: video inteligente para golfistas
+              Ripit
             </h1>
             <p className="mt-3 text-lg text-muted-foreground max-w-xl drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">
-              Revive las mejores jugadas y compartelas al momento. Instalacion rapida,
-              soporte experto y herramientas para eventos.
+              Replays instantáneos desde tee y green. Captura tu golpe y compártelo al instante.
             </p>
           </div>
 
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Link href="/contact" className="inline-flex items-center justify-center rounded-full bg-green-800 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-green-900/30 transition hover:bg-green-700">
-              Agendar demo
-            </Link>
-            <Link href="/recordings" className="inline-flex items-center justify-center rounded-full border border-white/30 px-6 py-3 text-base font-semibold text-white transition hover:border-green-400 hover:text-green-400">
-              Ver grabaciones
-            </Link>
-          </div>
-
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
-            {[
-              { label: "Ciudades donde nos encontramos", value: "3" },
-              { label: "Clubes activos", value: "7" },
-              { label: "Feeds mensuales", value: "35" },
-            ].map((s) => (
-              <div key={s.label} className="rounded-2xl border border-white/10 bg-background/30 backdrop-blur-md p-4">
-                <p className="text-2xl font-semibold text-foreground">{s.value}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{s.label}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-20">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.32em] text-green-400">
+            <p className="text-base sm:text-lg font-semibold uppercase tracking-[0.32em] text-[#088f26]">
               Clubes asociados
             </p>
-            <h2 className="mt-2 text-3xl font-semibold sm:text-4xl">Listos para grabar</h2>
           </div>
-          <Link href="/clubs" className="text-sm font-semibold text-green-400 hover:text-green-300">
+          <Link href="/clubs" className="text-sm font-semibold text-[#088f26] hover:text-[#0ab530]">
             Ver todos →
           </Link>
         </div>
@@ -111,12 +93,12 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-4 pb-24">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.32em] text-green-400">
+            <p className="text-sm font-semibold uppercase tracking-[0.32em] text-[#088f26]">
               Proximos eventos
             </p>
             <h2 className="mt-2 text-3xl font-semibold sm:text-4xl">Coberturas y torneos</h2>
           </div>
-          <Link href="/events" className="text-sm font-semibold text-green-400 hover:text-green-300">
+          <Link href="/events" className="text-sm font-semibold text-[#088f26] hover:text-[#0ab530]">
             Calendario →
           </Link>
         </div>
@@ -132,4 +114,3 @@ export default function Home() {
     </main>
   );
 }
-

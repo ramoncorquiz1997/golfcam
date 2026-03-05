@@ -3,12 +3,12 @@
 :root {
   --background: #e9f2f8;
   --foreground: #0b1220;
-  --primary: #044d0e;
-  --secondary: #0a6b18;
-  --brand: #044d0e;
+  --primary: #088f26;
+  --secondary: #06731e;
+  --brand: #088f26;
 
   --bg-navbar: rgba(255, 255, 255, 0.7);
-  --tint-navbar: rgba(4, 77, 14, 0.12);
+  --tint-navbar: rgba(8, 143, 38, 0.12);
   --border-navbar: rgba(0, 0, 0, 0.08);
 }
 
@@ -25,12 +25,12 @@
   :root {
     --background: #071127;
     --foreground: #e6eef6;
-    --primary: #0e7a1a;
-    --secondary: #2ca33f;
-    --brand: #044d0e;
+    --primary: #088f26;
+    --secondary: #1bb847;
+    --brand: #088f26;
 
     --bg-navbar: rgba(15, 18, 25, 0.55);
-    --tint-navbar: rgba(4, 77, 14, 0.3);
+    --tint-navbar: rgba(8, 143, 38, 0.3);
     --border-navbar: rgba(255, 255, 255, 0.08);
   }
 }
@@ -61,7 +61,7 @@ html, body {
   border-radius: 9999px;
   overflow: hidden;
   border: 2px solid #ffffff;
-  box-shadow: 0 0 0 2px rgba(4, 77, 14, 0.85);
+  box-shadow: 0 0 0 2px rgba(8, 143, 38, 0.85);
 }
 
 .club-pin-inner img {
